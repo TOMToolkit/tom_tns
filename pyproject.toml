@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "tom-tns"
+version = "0.1.0"
+description = "TOMtoolkit module for reporting transients to the TNS"
+authors = ["Joseph Chatelain <jchatelain@lco.global>"]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+packages = [{include = "tom_tns"}]
+
+[tool.poetry.dependencies]
+python = "^3.8.1"
+tomtoolkit = "^2.14"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
