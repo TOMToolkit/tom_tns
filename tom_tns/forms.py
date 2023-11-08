@@ -1,4 +1,8 @@
 from django import forms
+from django.conf import settings
+
+from tom_tns.tns_report import get_tns_values, get_tns_credentials, get_reverse_tns_values
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, HTML
 from crispy_forms.bootstrap import AppendedText
@@ -7,142 +11,22 @@ import json
 import os
 
 
-TNS_FILTER_CHOICES = [
-    (0, "Other"),
-    (1, "Clear"),
-    (10, "U-Johnson"),
-    (11, "B-Johnson"),
-    (12, "V-Johnson"),
-    (13, "R-Cousins"),
-    (14, "I-Cousins"),
-    (15, "J-Bessel"),
-    (16, "H-Bessel"),
-    (17, "K-Bessel"),
-    (18, "L"),
-    (19, "M"),
-    (20, "u-Sloan"),
-    (21, "g-Sloan"),
-    (22, "r-Sloan"),
-    (23, "i-Sloan"),
-    (24, "z-Sloan"),
-    (25, "y-P1"),
-    (26, "w-P1"),
-]
-
-TNS_INSTRUMENT_CHOICES = [
-    (0, "Other"),
-]
-
-TNS_CLASSIFICATION_CHOICES = [
-    (0, "Other"),
-    (1, "SN"),
-    (2, "SN I"),
-    (3, "SN Ia"),
-    (4, "SN Ib"),
-    (5, "SN Ic"),
-    (6, "SN Ib/c"),
-    (7, "SN Ic-BL"),
-    (9, "SN Ibn"),
-    (10, "SN II"),
-    (11, "SN IIP"),
-    (12, "SN IIL"),
-    (13, "SN IIn"),
-    (14, "SN IIb"),
-    (15, "SN I-faint"),
-    (16, "SN I-rapid"),
-    (18, "SLSN-I"),
-    (19, "SLSN-II"),
-    (20, "SLSN-R"),
-    (23, "Afterglow"),
-    (24, "LBV"),
-    (25, "ILRT"),
-    (26, "Nova"),
-    (27, "CV"),
-    (28, "Varstar"),
-    (29, "AGN"),
-    (30, "Galaxy"),
-    (31, "QSO"),
-    (40, "Light-Echo"),
-    (50, "Std-spec"),
-    (60, "Gap"),
-    (61, "Gap I"),
-    (62, "Gap II"),
-    (65, "LRN"),
-    (66, "FBOT"),
-    (70, "Kilonova"),
-    (99, "Impostor-SN"),
-    (100, "SN Ia-pec"),
-    (102, "SN Ia-SC"),
-    (103, "SN Ia-91bg-like"),
-    (104, "SN Ia-91T-like"),
-    (105, "SN Iax[02cx-like]"),
-    (106, "SN Ia-CSM"),
-    (107, "SN Ib-pec"),
-    (108, "SN Ic-pec"),
-    (109, "SN Icn"),
-    (110, "SN Ibn/Icn"),
-    (111, "SN II-pec"),
-    (112, "SN IIn-pec"),
-    (115, "SN Ib-Ca-rich"),
-    (116, "SN Ib/c-Ca-rich"),
-    (117, "SN Ic-Ca-rich"),
-    (118, "SN Ia-Ca-rich"),
-    (120, "TDE"),
-    (121, "TDE-H"),
-    (122, "TDE-He"),
-    (123, "TDE-H-He"),
-    (200, "WR"),
-    (201, "WR-WN"),
-    (202, "WR-RC"),
-    (203, "WR-WO"),
-    (210, "M dwarf"),
-]
-
-
 class TNSReportForm(forms.Form):
     ra = forms.FloatField(label='R.A.')
     dec = forms.FloatField(label='Dec.')
-    reporting_group = forms.ChoiceField(choices=[
-        (66, "SAGUARO"),
-    ], initial=(66, "SAGUARO"))
-    discovery_data_source = forms.ChoiceField(choices=[
-        (66, "SAGUARO"),
-    ], initial=(66, "SAGUARO"))
+    reporting_group = forms.ChoiceField(choices=[])
+    discovery_data_source = forms.ChoiceField(choices=[])
     reporter = forms.CharField(widget=forms.Textarea(attrs={'rows': 1}))
     discovery_date = forms.DateTimeField(initial=datetime.utcnow())
-    at_type = forms.ChoiceField(choices=[
-        (0, "Other"),
-        (1, "PSN"),
-        (2, "PNV"),
-        (3, "AGN"),
-        (4, "NUC"),
-        (5, "FRB"),
-    ], initial=(1, "PSN"), label='AT type')
-    archive = forms.ChoiceField(choices=[
-        (0, "Other"),
-        (1, "SDSS"),
-        (2, "DSS"),
-    ], initial=(0, "Other"))
+    at_type = forms.ChoiceField(choices=[], label='AT type')
+    archive = forms.ChoiceField(choices=[])
     archival_remarks = forms.CharField(initial="CSS")
     observation_date = forms.DateTimeField()
     flux = forms.FloatField()
     flux_error = forms.FloatField()
-    flux_units = forms.ChoiceField(choices=[
-        (0, "Other"),
-        (1, "ABMag"),
-        (2, "STMag"),
-        (3, "VegaMag"),
-        (4, "erg cm(-2) sec(-1)"),
-        (5, "erg cm(-2) sec(-1) Hz(-1)"),
-        (6, "erg cm(-2) sec(-1) Ang(-1)"),
-        (7, "counts sec(-1)"),
-        (8, "Jy"),
-        (9, "mJy"),
-        (10, "Neutrino events"),
-        (33, "Photons sec(-1) cm(-2)"),
-    ], initial=(1, "ABMag"))
-    filter = forms.ChoiceField(choices=TNS_FILTER_CHOICES, initial=(22, "r-Sloan"))
-    instrument = forms.ChoiceField(choices=TNS_INSTRUMENT_CHOICES, initial=(0, "Other"))
+    flux_units = forms.ChoiceField(choices=[])
+    filter = forms.ChoiceField(choices=[])
+    instrument = forms.ChoiceField(choices=[])
     limiting_flux = forms.FloatField(required=False)
     exposure_time = forms.FloatField(required=False)
     observer = forms.CharField(required=False)
@@ -152,6 +36,27 @@ class TNSReportForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['reporting_group'].choices = get_tns_values('groups')
+        self.fields['discovery_data_source'].choices = get_tns_values('groups')
+        self.fields['at_type'].choices = get_tns_values('at_types')
+        self.fields['at_type'].initial = (1, "PSN")
+        self.fields['filter'].choices = get_tns_values('filters')
+        self.fields['filter'].initial = (22, "r-Sloan")
+        self.fields['archive'].choices = get_tns_values('archives')
+        self.fields['instrument'].choices = get_tns_values('instruments')
+        self.fields['instrument'].initial = (0, "Other")
+        self.fields['flux_units'].choices = get_tns_values('units')
+        self.fields['flux_units'].initial = (1, "ABMag")
+
+        # set initial group if tom_name is in the list of tns group names
+        tns_group_name = get_tns_credentials().get('group_name', None)
+        if not tns_group_name:
+            tns_group_name = settings.TOM_NAME
+        default_group = get_reverse_tns_values('groups', tns_group_name)
+        if default_group:
+            self.fields['reporting_group'].initial = default_group
+            self.fields['discovery_data_source'].initial = default_group
+
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(
@@ -240,14 +145,14 @@ class TNSReportForm(forms.Form):
 class TargetClassifyForm(forms.Form):
     name = forms.CharField()
     classifier = forms.CharField(widget=forms.Textarea(attrs={'rows': 1}))
-    classification = forms.ChoiceField(choices=TNS_CLASSIFICATION_CHOICES, initial=(1, "SN"))
+    classification = forms.ChoiceField(choices=[], initial=(1, "SN"))
     redshift = forms.FloatField(required=False)
     group = forms.ChoiceField(choices=[
         (66, "SAGUARO"),
     ], initial=(66, "SAGUARO"))
     classification_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 1}))
     observation_date = forms.DateTimeField()
-    instrument = forms.ChoiceField(choices=TNS_INSTRUMENT_CHOICES, initial=(0, "Other"))
+    instrument = forms.ChoiceField(choices=[], initial=(0, "Other"))
     exposure_time = forms.FloatField(required=False)
     observer = forms.CharField()
     reducer = forms.CharField(required=False)

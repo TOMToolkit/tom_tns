@@ -1,15 +1,24 @@
+from django.conf import settings
 from django.urls import reverse_lazy
 from django.views.generic.edit import ProcessFormView, TemplateResponseMixin, FormMixin
 from django.shortcuts import redirect
 from guardian.mixins import PermissionListMixin
 
-from tom_tns.forms import TNSReportForm, TNS_FILTER_CHOICES, TNS_INSTRUMENT_CHOICES, TNS_CLASSIFICATION_CHOICES
+from tom_tns.forms import TNSReportForm
+from tom_tns.tns_report import get_tns_credentials, get_tns_values
 from tom_targets.models import Target
 
+import json
 
-TNS_FILTER_IDS = {name: fid for fid, name in TNS_FILTER_CHOICES}
-TNS_INSTRUMENT_IDS = {name: iid for iid, name in TNS_INSTRUMENT_CHOICES}
-TNS_CLASSIFICATION_IDS = {name: cid for cid, name in TNS_CLASSIFICATION_CHOICES}
+
+TNS_URL = 'https://sandbox.wis-tns.org/api'  # TODO: change this to the main site
+TNS_credentials = get_tns_credentials()
+TNS_MARKER = 'tns_marker' + json.dumps({'tns_id': TNS_credentials['bot_id'],
+                                        'type': 'bot',
+                                        'name': TNS_credentials['bot_name']})
+TNS_FILTER_IDS = {name: fid for fid, name in get_tns_values('filters')}
+TNS_INSTRUMENT_IDS = {name: iid for iid, name in get_tns_values('instruments')}
+TNS_CLASSIFICATION_IDS = {name: cid for cid, name in get_tns_values('object_types')}
 
 
 class TNSFormView(PermissionListMixin, TemplateResponseMixin, FormMixin, ProcessFormView):
