@@ -16,7 +16,7 @@ class TNSReportForm(forms.Form):
     dec = forms.FloatField(label='Dec.')
     reporting_group = forms.ChoiceField(choices=[])
     discovery_data_source = forms.ChoiceField(choices=[])
-    reporter = forms.CharField(widget=forms.Textarea(attrs={'rows': 1}))
+    reporter = forms.CharField(widget=forms.Textarea(attrs={'rows': 1}), label='Reporter Name(s) / Author List')
     discovery_date = forms.DateTimeField(initial=datetime.utcnow())
     at_type = forms.ChoiceField(choices=[], label='AT type')
     archive = forms.ChoiceField(choices=[])
@@ -30,9 +30,9 @@ class TNSReportForm(forms.Form):
     limiting_flux = forms.FloatField(required=False)
     exposure_time = forms.FloatField(required=False)
     observer = forms.CharField(required=False)
-    discovery_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 1}))
-    photometry_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 1}))
-    nondetection_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 1}))
+    discovery_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
+    photometry_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
+    nondetection_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -142,41 +142,48 @@ class TNSReportForm(forms.Form):
         return json.dumps(report_data)
 
 
-class TargetClassifyForm(forms.Form):
-    name = forms.CharField()
-    classifier = forms.CharField(widget=forms.Textarea(attrs={'rows': 1}))
-    classification = forms.ChoiceField(choices=[], initial=(1, "SN"))
+class TNSClassifyForm(forms.Form):
+    object_name = forms.CharField()
+    classifier = forms.CharField(widget=forms.Textarea(attrs={'rows': 1}), label='Classifier Name(s) / Author List')
+    classification = forms.ChoiceField(choices=[])
     redshift = forms.FloatField(required=False)
-    group = forms.ChoiceField(choices=[
-        (66, "SAGUARO"),
-    ], initial=(66, "SAGUARO"))
-    classification_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 1}))
+    reporting_group = forms.ChoiceField(choices=[])
+    classification_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
     observation_date = forms.DateTimeField()
-    instrument = forms.ChoiceField(choices=[], initial=(0, "Other"))
+    instrument = forms.ChoiceField(choices=[])
     exposure_time = forms.FloatField(required=False)
     observer = forms.CharField()
     reducer = forms.CharField(required=False)
-    spectrum_type = forms.ChoiceField(choices=[
-        (1, 'Object'),
-        (2, 'Host'),
-        (3, 'Sky'),
-        (4, 'Arcs'),
-        (5, 'Synthetic'),
-    ])
+    spectrum_type = forms.ChoiceField(choices=[])
     ascii_file = forms.FileField(label='ASCII file')
     fits_file = forms.FileField(label='FITS file', required=False)
-    spectrum_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 1}))
+    spectrum_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['reporting_group'].choices = get_tns_values('groups')
+        self.fields['instrument'].choices = get_tns_values('instruments')
+        self.fields['instrument'].initial = (0, "Other")
+        self.fields['classification'].choices = get_tns_values('object_types')
+        self.fields['classification'].initial = (1, "SN")
+        self.fields['spectrum_type'].choices = get_tns_values('spectra_types')
+
+        # set initial group if tom_name is in the list of tns group names
+        tns_group_name = get_tns_credentials().get('group_name', None)
+        if not tns_group_name:
+            tns_group_name = settings.TOM_NAME
+        default_group = get_reverse_tns_values('groups', tns_group_name)
+        if default_group:
+            self.fields['reporting_group'].initial = default_group
+
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(
                 Column('classifier', css_class='col-md-8'),
-                Column('group'),
+                Column('reporting_group'),
             ),
             Row(
-                Column('name'),
+                Column('object_name'),
                 Column('classification'),
                 Column('redshift'),
             ),
@@ -197,7 +204,7 @@ class TargetClassifyForm(forms.Form):
                 Column('fits_file'),
             ),
             Row(Column('spectrum_remarks')),
-            Row(Column(Submit('submit', 'Submit Report'))),
+            Row(Column(Submit('submit', 'Submit Classification'))),
         )
 
     def files_to_upload(self):
