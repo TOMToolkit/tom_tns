@@ -1,5 +1,5 @@
 {% extends 'tom_common/base.html' %}
-{% load bootstrap4 crispy_forms_tags %}
+{% load bootstrap4 tns_extras%}
 {% block title %}Report to TNS{% endblock %}
 {% block additional_css %} {% endblock %}
 {% block content %}
@@ -37,10 +37,7 @@
             <br/>
             <h4>Report {{ target.name }} to the TNS</h4>
             <hr/>
-            <form method="post">
-                {% csrf_token %}
-                {% crispy report_form %}
-            </form>
+            {% report_to_tns %}
         </div>
     </div>
     {% if default_form == 'classify' %}
@@ -55,10 +52,7 @@
             <br/>
             <h4>Classify {{ target.name }} with the TNS</h4>
             <hr/>
-            <form method="post">
-                {% csrf_token %}
-                {% crispy classify_form %}
-            </form>
+            {% classify_with_tns %}
         </div>
     </div>
 </div>

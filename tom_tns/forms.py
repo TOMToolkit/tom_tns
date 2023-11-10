@@ -115,6 +115,7 @@ class TNSReportForm(forms.Form):
                     "reporter": self.cleaned_data['reporter'],
                     "discovery_datetime": self.cleaned_data['discovery_date'].strftime('%Y-%m-%d %H:%M:%S'),
                     "at_type": self.cleaned_data['at_type'],
+                    "remarks": self.cleaned_data["discovery_remarks"],
                     "non_detection": {
                         "archiveid": self.cleaned_data['archive'],
                         "archival_remarks": self.cleaned_data['archival_remarks'],
@@ -132,7 +133,7 @@ class TNSReportForm(forms.Form):
                                 "limiting_flux": self.cleaned_data['limiting_flux'],
                                 "exptime": self.cleaned_data['exposure_time'],
                                 "observer": self.cleaned_data['observer'],
-                                "comments": self.cleaned_data['comments'],
+                                "comments": self.cleaned_data['photometry_remarks'],
                             },
                         }
                     },
@@ -206,22 +207,6 @@ class TNSClassifyForm(forms.Form):
             Row(Column('spectrum_remarks')),
             Row(Column(Submit('submit', 'Submit Classification'))),
         )
-
-    def files_to_upload(self):
-        files_to_upload = {}
-        if self.cleaned_data['ascii_file'] is not None:
-            files_to_upload['files[0]'] = (
-                os.path.basename(self.cleaned_data['ascii_file'].name),
-                self.cleaned_data['ascii_file'].open(),
-                'text/plain'
-            )
-        if self.cleaned_data['fits_file'] is not None:
-            files_to_upload['files[1]'] = (
-                os.path.basename(self.cleaned_data['fits_file'].name),
-                self.cleaned_data['fits_file'].open(),
-                'application/fits'
-            )
-        return files_to_upload
 
     def generate_tns_report(self, new_filenames=None):
         """

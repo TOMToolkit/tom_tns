@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 from django.core.cache import cache
 from django.conf import settings
 
+import json
 import logging
 logger = logging.getLogger(__name__)
 
@@ -82,13 +83,32 @@ def reverse_tns_values(all_tns_values):
     return reversed_tns_values
 
 
-def upload_files_to_tns(files):
+def build_file_dict(files):
+    """
+    Build a dictionary of files to upload to the TNS.
+    """
+    file_load = {}
+    for i, file in enumerate(files):
+        if file['type'] == 'ascii':
+            file_load[f'file[{i}]'] = (file['filename'], file['content'], 'text/plain')
+        if file['type'] == 'fits':
+            file_load[f'file[{i}]'] = (file['filename'], file['content'], 'application/fits')
+    return file_load
+
+
+def pre_upload_files_to_tns(files):
     """
     Upload files to the Transient Name Server according to this manual:
     https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
     """
-    json_data = {'api_key': TNS['api_key']}
-    response = requests.post(TNS_URL + '/file-upload', headers={'User-Agent': TNS_MARKER}, data=json_data, files=files)
+    tns_credentials = get_tns_credentials()
+    file_load = build_file_dict(files)
+    tns_marker = 'tns_marker' + json.dumps({'tns_id': tns_credentials['bot_id'],
+                                            'type': 'bot',
+                                            'name': tns_credentials['bot_name']})
+    json_data = {'api_key': tns_credentials['api_key']}
+    response = requests.post(tns_credentials['url'] + '/file-upload', headers={'User-Agent': tns_marker},
+                             data=json_data, files=file_load)
     response.raise_for_status()
     new_filenames = response.json()['data']
     logger.info(f"Uploaded {', '.join(new_filenames)} to the TNS")
