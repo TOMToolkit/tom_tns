@@ -88,12 +88,13 @@ def build_file_dict(files):
     Build a dictionary of files to upload to the TNS.
     """
     file_load = {}
-    for i, file in enumerate(files):
-        if file['type'] == 'ascii':
-            file_load[f'file[{i}]'] = (file['filename'], file['content'], 'text/plain')
-        if file['type'] == 'fits':
-            file_load[f'file[{i}]'] = (file['filename'], file['content'], 'application/fits')
-    return file_load
+    i = 0
+    for file in files:
+        if files[file]:
+            file_load[f'file[{i}]'] = (files[file].name, files[file].open(), files[file].content_type)
+            files[file] = f'file[{i}]'
+            i += 1
+    return file_load, files
 
 
 def pre_upload_files_to_tns(files):
@@ -102,16 +103,17 @@ def pre_upload_files_to_tns(files):
     https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
     """
     tns_credentials = get_tns_credentials()
-    file_load = build_file_dict(files)
+    file_load, files = build_file_dict(files)
     tns_marker = 'tns_marker' + json.dumps({'tns_id': tns_credentials['bot_id'],
                                             'type': 'bot',
                                             'name': tns_credentials['bot_name']})
     json_data = {'api_key': tns_credentials['api_key']}
-    response = requests.post(tns_credentials['url'] + '/file-upload', headers={'User-Agent': tns_marker},
+    response = requests.post(tns_credentials['tns_base_url'] + '/file-upload', headers={'User-Agent': tns_marker},
                              data=json_data, files=file_load)
     response.raise_for_status()
     new_filenames = response.json()['data']
     logger.info(f"Uploaded {', '.join(new_filenames)} to the TNS")
+
     return new_filenames
 
 

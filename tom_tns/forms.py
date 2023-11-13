@@ -1,7 +1,7 @@
 from django import forms
 from django.conf import settings
 
-from tom_tns.tns_report import get_tns_values, get_tns_credentials, get_reverse_tns_values
+from tom_tns.tns_report import get_tns_values, get_tns_credentials, get_reverse_tns_values, pre_upload_files_to_tns
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, HTML
@@ -156,8 +156,8 @@ class TNSClassifyForm(forms.Form):
     observer = forms.CharField()
     reducer = forms.CharField(required=False)
     spectrum_type = forms.ChoiceField(choices=[])
-    ascii_file = forms.FileField(label='ASCII file')
-    fits_file = forms.FileField(label='FITS file', required=False)
+    ascii_file = forms.FileField(label='ASCII file', required=False, widget=forms.ClearableFileInput())
+    fits_file = forms.FileField(label='FITS file', required=False, widget=forms.ClearableFileInput())
     spectrum_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
 
     def __init__(self, *args, **kwargs):
@@ -208,17 +208,15 @@ class TNSClassifyForm(forms.Form):
             Row(Column(Submit('submit', 'Submit Classification'))),
         )
 
-    def generate_tns_report(self, new_filenames=None):
+    def generate_tns_report(self):
         """
         Generate TNS bulk classification report according to the schema in this manual:
         https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
 
         Returns the report as a JSON-formatted string
         """
-        if new_filenames is None:
-            ascii_filename = os.path.basename(self.cleaned_data['ascii_file'].name)
-        else:
-            ascii_filename = new_filenames[0]
+        file_list = {'ascii_file': self.cleaned_data['ascii_file'], 'fits_file': self.cleaned_data['fits_file']}
+        tns_filenames = pre_upload_files_to_tns(file_list)
         report_data = {
             "classification_report": {
                 "0": {
@@ -237,7 +235,7 @@ class TNSClassifyForm(forms.Form):
                                 "observer": self.cleaned_data['observer'],
                                 "reducer": self.cleaned_data['reducer'],
                                 "spectypeid": self.cleaned_data['spectrum_type'],
-                                "ascii_file": ascii_filename,
+                                "ascii_file": tns_filenames['ascii_file'],
                                 "remarks": self.cleaned_data['spectrum_remarks'],
                             },
                         }
@@ -246,9 +244,9 @@ class TNSClassifyForm(forms.Form):
             }
         }
         if self.cleaned_data['fits_file'] is not None:
-            if new_filenames is None:
+            if tns_filenames is None:
                 fits_filename = os.path.basename(self.cleaned_data['fits_file'].name)
             else:
-                fits_filename = new_filenames[1]
-            report_data['classification_report']['0']['spectra']['spectra_group']['0']['fits_file'] = fits_filename
+                fits_filename = tns_filenames[1]
+            report_data['classification_report']['0']['spectra']['spectra_group']['0']['fits_file'] = tn_filenames['fits_file']
         return json.dumps(report_data)
