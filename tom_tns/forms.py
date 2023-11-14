@@ -1,7 +1,10 @@
+import requests
+
 from django import forms
 from django.conf import settings
 
-from tom_tns.tns_report import get_tns_values, get_tns_credentials, get_reverse_tns_values, pre_upload_files_to_tns
+from tom_tns.tns_report import get_tns_values, get_tns_credentials, get_reverse_tns_values, pre_upload_files_to_tns,\
+    BadTnsRequest
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, HTML
@@ -140,7 +143,7 @@ class TNSReportForm(forms.Form):
                 }
             }
         }
-        return json.dumps(report_data)
+        return report_data
 
 
 class TNSClassifyForm(forms.Form):
@@ -215,16 +218,21 @@ class TNSClassifyForm(forms.Form):
 
         Returns the report as a JSON-formatted string
         """
-        file_list = {'ascii_file': self.cleaned_data['ascii_file'], 'fits_file': self.cleaned_data['fits_file']}
-        tns_filenames = pre_upload_files_to_tns(file_list)
+        file_list = {'ascii_file': self.cleaned_data['ascii_file'],
+                     'fits_file': self.cleaned_data['fits_file'],
+                     'other_files': []}
+        try:
+            tns_filenames = pre_upload_files_to_tns(file_list)
+        except requests.exceptions.HTTPError as e:
+            return {'message': f"ERROR: {e}"}
         report_data = {
             "classification_report": {
                 "0": {
-                    "name": self.cleaned_data['name'],
+                    "name": self.cleaned_data['object_name'],
                     "classifier": self.cleaned_data['classifier'],
                     "objtypeid": self.cleaned_data['classification'],
                     "redshift": self.cleaned_data['redshift'],
-                    "groupid": self.cleaned_data['group'],
+                    "groupid": self.cleaned_data['reporting_group'],
                     "remarks": self.cleaned_data['classification_remarks'],
                     "spectra": {
                         "spectra-group": {
@@ -235,7 +243,6 @@ class TNSClassifyForm(forms.Form):
                                 "observer": self.cleaned_data['observer'],
                                 "reducer": self.cleaned_data['reducer'],
                                 "spectypeid": self.cleaned_data['spectrum_type'],
-                                "ascii_file": tns_filenames['ascii_file'],
                                 "remarks": self.cleaned_data['spectrum_remarks'],
                             },
                         }
@@ -243,10 +250,11 @@ class TNSClassifyForm(forms.Form):
                 }
             }
         }
-        if self.cleaned_data['fits_file'] is not None:
-            if tns_filenames is None:
-                fits_filename = os.path.basename(self.cleaned_data['fits_file'].name)
-            else:
-                fits_filename = tns_filenames[1]
-            report_data['classification_report']['0']['spectra']['spectra_group']['0']['fits_file'] = tn_filenames['fits_file']
-        return json.dumps(report_data)
+        if tns_filenames:
+            report_data['classification_report']['0']['spectra']['spectra-group']['0']['ascii_file'] = \
+                tns_filenames['ascii_file']
+            report_data['classification_report']['0']['spectra']['spectra-group']['0']['fits_file'] = \
+                tns_filenames['fits_file']
+        else:
+            raise BadTnsRequest("No files were uploaded to TNS")
+        return report_data

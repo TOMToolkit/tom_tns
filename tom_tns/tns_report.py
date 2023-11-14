@@ -3,17 +3,28 @@ from urllib.parse import urljoin
 
 from django.core.cache import cache
 from django.conf import settings
+from django.contrib import messages
 
 import json
+import time
 import logging
 logger = logging.getLogger(__name__)
+
+
+class BadTnsRequest(Exception):
+    """ This Exception will be raised by errors during the TNS submission process """
+    pass
 
 
 def get_tns_credentials():
     """
     Get the TNS credentials from settings.py.
     """
-    return settings.BROKERS['TNS']
+    tns_info = settings.BROKERS['TNS']
+    tns_info['marker'] = 'tns_marker' + json.dumps({'tns_id': tns_info['bot_id'],
+                                                    'type': 'bot',
+                                                    'name': tns_info['bot_name']})
+    return tns_info
 
 
 def get_tns_values(option_list):
@@ -26,7 +37,7 @@ def get_tns_values(option_list):
     selected_values = all_tns_values[option_list]
     tuple_list = []
     if isinstance(selected_values, list):
-        tuple_list = [(v, v) for v in selected_values]
+        tuple_list = [(i, v) for i, v in enumerate(selected_values)]
     if isinstance(selected_values, dict):
         tuple_list = [(k, v) for k, v in selected_values.items()]
     return tuple_list
@@ -89,11 +100,25 @@ def build_file_dict(files):
     """
     file_load = {}
     i = 0
-    for file in files:
-        if files[file]:
-            file_load[f'file[{i}]'] = (files[file].name, files[file].open(), files[file].content_type)
-            files[file] = f'file[{i}]'
+    if files['ascii_file']:
+        file_load[f'file[{i}]'] = (files['ascii_file'].name,
+                                   files['ascii_file'].open(),
+                                   files['ascii_file'].content_type)
+        files['ascii_file'] = i
+        i += 1
+    if files['fits_file']:
+        file_load[f'file[{i}]'] = (files['fits_file'].name,
+                                   files['fits_file'].open(),
+                                   files['fits_file'].content_type)
+        files['fits_file'] = i
+        i += 1
+    other_index = []
+    for file in files['other_files']:
+        if file:
+            file_load[f'file[{i}]'] = (file.name, file.open(), file.content_type)
+            other_index.append(i)
             i += 1
+    files['other_files'] = other_index
     return file_load, files
 
 
@@ -104,14 +129,18 @@ def pre_upload_files_to_tns(files):
     """
     tns_credentials = get_tns_credentials()
     file_load, files = build_file_dict(files)
-    tns_marker = 'tns_marker' + json.dumps({'tns_id': tns_credentials['bot_id'],
-                                            'type': 'bot',
-                                            'name': tns_credentials['bot_name']})
+    print(file_load)
+    if not file_load:
+        return None
+    tns_marker = tns_credentials['marker']
     json_data = {'api_key': tns_credentials['api_key']}
     response = requests.post(tns_credentials['tns_base_url'] + '/file-upload', headers={'User-Agent': tns_marker},
                              data=json_data, files=file_load)
+    print(response.text)
+    print(response)
+    print(response.json())
     response.raise_for_status()
-    new_filenames = response.json()['data']
+    new_filenames = response.json().get('data', {})
     logger.info(f"Uploaded {', '.join(new_filenames)} to the TNS")
 
     return new_filenames
@@ -122,8 +151,11 @@ def send_tns_report(data):
     Send a JSON bulk report to the Transient Name Server according to this manual:
     https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
     """
-    json_data = {'api_key': TNS['api_key'], 'data': data}
-    response = requests.post(TNS_URL + '/bulk-report', headers={'User-Agent': TNS_MARKER}, data=json_data)
+    tns_info = get_tns_credentials()
+    json_data = {'api_key': tns_info['api_key'], 'data': data}
+    response = requests.post(tns_info['tns_base_url'] + '/bulk-report',
+                             headers={'User-Agent': tns_info['marker']},
+                             data=json_data)
     response.raise_for_status()
     report_id = response.json()['data']['report_id']
     logger.info(f'Sent TNS report ID {report_id:d}')
@@ -137,10 +169,12 @@ def get_tns_report_reply(report_id, request):
 
     Posts an informational message in a banner on the page using ``request``
     """
-    json_data = {'api_key': TNS['api_key'], 'report_id': report_id}
+    tns_info = get_tns_credentials()
+    json_data = {'api_key': tns_info['api_key'], 'report_id': report_id}
     for _ in range(6):
         time.sleep(5)
-        response = requests.post(TNS_URL + '/bulk-report-reply', headers={'User-Agent': TNS_MARKER}, data=json_data)
+        response = requests.post(tns_info['tns_base_url'] + '/bulk-report-reply',
+                                 headers={'User-Agent': tns_info['marker']}, data=json_data)
         if response.ok:
             break
     response.raise_for_status()
