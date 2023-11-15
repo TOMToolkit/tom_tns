@@ -98,28 +98,18 @@ def build_file_dict(files):
     """
     Build a dictionary of files to upload to the TNS.
     """
+    new_files = {}
     file_load = {}
     i = 0
     if files['ascii_file']:
-        file_load[f'file[{i}]'] = (files['ascii_file'].name,
-                                   files['ascii_file'].open(),
-                                   files['ascii_file'].content_type)
-        files['ascii_file'] = i
+        file_load[f'files[{i}]'] = (files['ascii_file'].name, files['ascii_file'].open(), 'text/plain')
+        new_files['ascii_file'] = i
         i += 1
     if files['fits_file']:
-        file_load[f'file[{i}]'] = (files['fits_file'].name,
-                                   files['fits_file'].open(),
-                                   files['fits_file'].content_type)
-        files['fits_file'] = i
+        file_load[f'files[{i}]'] = (files['fits_file'].name, files['fits_file'].open('rb'), 'application/fits')
+        new_files['fits_file'] = i
         i += 1
-    other_index = []
-    for file in files['other_files']:
-        if file:
-            file_load[f'file[{i}]'] = (file.name, file.open(), file.content_type)
-            other_index.append(i)
-            i += 1
-    files['other_files'] = other_index
-    return file_load, files
+    return file_load, new_files
 
 
 def pre_upload_files_to_tns(files):
@@ -128,22 +118,24 @@ def pre_upload_files_to_tns(files):
     https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
     """
     tns_credentials = get_tns_credentials()
-    file_load, files = build_file_dict(files)
-    print(file_load)
+    file_load, new_files = build_file_dict(files)
     if not file_load:
         return None
     tns_marker = tns_credentials['marker']
     json_data = {'api_key': tns_credentials['api_key']}
     response = requests.post(tns_credentials['tns_base_url'] + '/file-upload', headers={'User-Agent': tns_marker},
                              data=json_data, files=file_load)
-    print(response.text)
-    print(response)
-    print(response.json())
     response.raise_for_status()
     new_filenames = response.json().get('data', {})
     logger.info(f"Uploaded {', '.join(new_filenames)} to the TNS")
-
-    return new_filenames
+    if not new_filenames:
+        return None
+    for file in new_files:
+        try:
+            new_files[file] = new_filenames[new_files[file]]
+        except IndexError:
+            new_files[file] = ''
+    return new_files
 
 
 def send_tns_report(data):
@@ -162,23 +154,8 @@ def send_tns_report(data):
     return report_id
 
 
-def get_tns_report_reply(report_id, request):
-    """
-    Get feedback from the Transient Name Server in response to a bulk report according to this manual:
-    https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
-
-    Posts an informational message in a banner on the page using ``request``
-    """
-    tns_info = get_tns_credentials()
-    json_data = {'api_key': tns_info['api_key'], 'report_id': report_id}
-    for _ in range(6):
-        time.sleep(5)
-        response = requests.post(tns_info['tns_base_url'] + '/bulk-report-reply',
-                                 headers={'User-Agent': tns_info['marker']}, data=json_data)
-        if response.ok:
-            break
-    response.raise_for_status()
-    feedback_section = response.json()['data']['feedback']
+def parse_object_from_tns_response(response_json, request):
+    feedback_section = response_json['data']['feedback']
     feedbacks = []
     if 'at_report' in feedback_section:
         feedbacks += feedback_section['at_report']
@@ -208,4 +185,37 @@ def get_tns_report_reply(report_id, request):
         log_message = 'Problem getting response from TNS'
         logger.error(log_message)
         messages.error(request, log_message)
+    return iau_name
+
+
+def get_tns_report_reply(report_id, request):
+    """
+    Get feedback from the Transient Name Server in response to a bulk report according to this manual:
+    https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
+
+    Posts an informational message in a banner on the page using ``request``
+    """
+    tns_info = get_tns_credentials()
+    reply_data = {'api_key': tns_info['api_key'], 'report_id': report_id}
+    attempts = 0
+    # TNS Submissions return immediately with an id, which you must then check to see if the message
+    # was processed, and if it was accepted or rejected. Here we check up to 10 times, waiting 1s
+    # between checks. Under normal circumstances, it should be processed within a few seconds.
+    while attempts < 10:
+        response = requests.post(tns_info['tns_base_url'] + '/bulk-report-reply',
+                                 headers={'User-Agent': tns_info['marker']}, data=reply_data)
+        attempts += 1
+        # A 404 response means the report has not been processed yet
+        if response.status_code == 404:
+            time.sleep(1)
+        # A 400 response means the report failed with certain errors
+        elif response.status_code == 400:
+            raise BadTnsRequest(f"TNS submission failed with feedback: "
+                                f"{response.json().get('data', {}).get('feedback', {})}")
+        # A 200 response means the report was successful, and we can parse out the object name
+        elif response.status_code == 200:
+            iau_name = parse_object_from_tns_response(response.json(), request)
+            break
+        else:
+            raise BadTnsRequest(f"TNS submission failed with status code {response.status_code}")
     return iau_name

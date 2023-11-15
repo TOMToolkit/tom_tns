@@ -159,7 +159,7 @@ class TNSClassifyForm(forms.Form):
     observer = forms.CharField()
     reducer = forms.CharField(required=False)
     spectrum_type = forms.ChoiceField(choices=[])
-    ascii_file = forms.FileField(label='ASCII file', required=False, widget=forms.ClearableFileInput())
+    ascii_file = forms.FileField(label='ASCII file', required=True, widget=forms.ClearableFileInput())
     fits_file = forms.FileField(label='FITS file', required=False, widget=forms.ClearableFileInput())
     spectrum_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
 
@@ -252,9 +252,9 @@ class TNSClassifyForm(forms.Form):
         }
         if tns_filenames:
             report_data['classification_report']['0']['spectra']['spectra-group']['0']['ascii_file'] = \
-                tns_filenames['ascii_file']
+                tns_filenames.get('ascii_file', '')
             report_data['classification_report']['0']['spectra']['spectra-group']['0']['fits_file'] = \
-                tns_filenames['fits_file']
+                tns_filenames.get('fits_file', '')
         else:
             raise BadTnsRequest("No files were uploaded to TNS")
         return report_data

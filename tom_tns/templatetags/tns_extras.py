@@ -41,7 +41,7 @@ def report_to_tns(context):
 def classify_with_tns(context):
     target = context['target']
     initial = {
-        'object_name': target.name,
+        'object_name': target.name.replace('AT', '').replace('SN', ''),
         'classifier': f'{context["request"].user.get_full_name()}, using {settings.TOM_NAME}',
     }
     # Get photometry if available
