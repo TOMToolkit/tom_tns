@@ -15,6 +15,10 @@ import json
 
 
 class TNSFormView(PermissionListMixin, TemplateView):
+    """
+    This view is used to display the TNS report forms.
+    The default form is the report form, but if the target name starts with AT, we switch to the classification form.
+    """
     template_name = 'tom_tns/tns_report.html'
 
     def get_context_data(self, **kwargs):
@@ -22,7 +26,7 @@ class TNSFormView(PermissionListMixin, TemplateView):
         target = Target.objects.get(pk=self.kwargs['pk'])
         context['target'] = target
         # We want to establish a default tab to display.
-        # by default, we start on report, but change to classify if the target name starts with AT
+        # by default, we start on report, but change to classify if the target name starts with AT.
         # If the target has an SN name, we warn the user that the target has likely been classified already.
         context['default_form'] = 'report'
         for name in target.names:
@@ -35,6 +39,9 @@ class TNSFormView(PermissionListMixin, TemplateView):
 
 
 class TNSSubmitView(FormView):
+    """
+    This View is used to submit the TNS report forms.
+    """
 
     def get_success_url(self):
         return reverse_lazy('targets:detail', kwargs=self.kwargs)
@@ -45,16 +52,23 @@ class TNSSubmitView(FormView):
         return HttpResponseRedirect(self.get_success_url())
 
     def form_valid(self, form):
+        """
+        If the Form is successfully constructed, we generate the TNS report and submit it to the TNS.
+        """
         try:
+            # Build TNS Report
             tns_report = form.generate_tns_report()
+            # Submit TNS Report
             report_id = send_tns_report(json.dumps(tns_report))
+            # Get IAU name from Report Reply
             iau_name = get_tns_report_reply(report_id, self.request)
-            # update the target name
             if iau_name is not None:
+                # update the target name in Tom DB
                 target = Target.objects.get(pk=self.kwargs['pk'])
                 old_name = target.name
                 target.name = iau_name
                 target.save()
+                # Save old name as alias
                 new_alias = TargetName(name=old_name, target=target)
                 new_alias.save()
         except (requests.exceptions.HTTPError, BadTnsRequest) as e:

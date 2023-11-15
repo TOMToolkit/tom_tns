@@ -19,11 +19,13 @@ class BadTnsRequest(Exception):
 def get_tns_credentials():
     """
     Get the TNS credentials from settings.py.
+    This should include the bot_id, bot_name, api_key, tns_base_url, and possibly group_name.
     """
     tns_info = settings.BROKERS['TNS']
-    tns_info['marker'] = 'tns_marker' + json.dumps({'tns_id': tns_info['bot_id'],
+    # Build TNS Marker using Bot info
+    tns_info['marker'] = 'tns_marker' + json.dumps({'tns_id': tns_info.get('bot_id', None),
                                                     'type': 'bot',
-                                                    'name': tns_info['bot_name']})
+                                                    'name': tns_info.get('bot_name', None)})
     return tns_info
 
 
@@ -43,19 +45,14 @@ def get_tns_values(option_list):
     return tuple_list
 
 
-def get_reverse_tns_values(option_list, value=None):
-    """ Retrieve the reverse mapping of TNS options used to go from option to value.
-        I.e. reversed_tns_values['groups'] = {
-            'group name 1': 1,
-            'group name 2': 4,
-            'group whatever': 129
-        }
+def get_reverse_tns_values(option_list, value):
+    """
+    Retrieve the reverse mapping of TNS options. Used to go from option to value for a specific list of options.
+    Returns a tuple of the option value and the option label.
     """
     reversed_tns_values = cache.get("reverse_tns_values", {})
     if not reversed_tns_values:
         _, reversed_tns_values = populate_tns_values()
-    if not value:
-        return reversed_tns_values[option_list]
     try:
         return reversed_tns_values[option_list][value], value
     except KeyError:
@@ -63,12 +60,13 @@ def get_reverse_tns_values(option_list, value=None):
 
 
 def populate_tns_values():
-    """pull all the values from the TNS API"""
+    """pull all the values from the TNS API and Cache for an hour"""
 
     # Need to spoof a web based user agent or TNS will block the request :(
     SPOOF_USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0.'
 
-    tns_base_url = get_tns_credentials()['tns_base_url']
+    # Use sandbox URL if no url found in settings.py
+    tns_base_url = get_tns_credentials().get('tns_base_url', 'https://sandbox.wis-tns.org/api')
     all_tns_values = {}
     reversed_tns_values = {}
     try:
@@ -85,6 +83,7 @@ def populate_tns_values():
 
 
 def reverse_tns_values(all_tns_values):
+    """reverse the values from the TNS API"""
     reversed_tns_values = {}
     for key, values in all_tns_values.items():
         if isinstance(values, list):
@@ -96,7 +95,12 @@ def reverse_tns_values(all_tns_values):
 
 def build_file_dict(files):
     """
-    Build a dictionary of files to upload to the TNS.
+    Build a dictionary of files to upload to the TNS as well as a dictionary connecting the uploaded name to the new
+    name returned from TNS.
+    TNS requires a specific format for the file upload:
+    https://www.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
+    file_Load: {files[0]: Filename, files[1]: Filename2, ...}
+    new_files: {ascii_file: <<index for ascii file>>, fits_file: <<index for fits file>>, ...}
     """
     new_files = {}
     file_load = {}
@@ -121,15 +125,18 @@ def pre_upload_files_to_tns(files):
     file_load, new_files = build_file_dict(files)
     if not file_load:
         return None
+    # build request parameters
     tns_marker = tns_credentials['marker']
-    json_data = {'api_key': tns_credentials['api_key']}
+    upload_data = {'api_key': tns_credentials['api_key']}
     response = requests.post(tns_credentials['tns_base_url'] + '/file-upload', headers={'User-Agent': tns_marker},
-                             data=json_data, files=file_load)
+                             data=upload_data, files=file_load)
     response.raise_for_status()
+    # If successful, TNS returns a list of new filenames
     new_filenames = response.json().get('data', {})
     logger.info(f"Uploaded {', '.join(new_filenames)} to the TNS")
     if not new_filenames:
         return None
+    # Return dictionary of updated TNS names for each uploaded file_type
     for file in new_files:
         try:
             new_files[file] = new_filenames[new_files[file]]
@@ -142,6 +149,8 @@ def send_tns_report(data):
     """
     Send a JSON bulk report to the Transient Name Server according to this manual:
     https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
+    Returns a report ID if successful.
+    This ID can be used to retrieve the report from the TNS.
     """
     tns_info = get_tns_credentials()
     json_data = {'api_key': tns_info['api_key'], 'data': data}
@@ -157,6 +166,7 @@ def send_tns_report(data):
 def parse_object_from_tns_response(response_json, request):
     feedback_section = response_json['data']['feedback']
     feedbacks = []
+    iau_name = None
     if 'at_report' in feedback_section:
         feedbacks += feedback_section['at_report']
     if 'classification_report' in feedback_section:
@@ -180,9 +190,8 @@ def parse_object_from_tns_response(response_json, request):
             logger.info(log_message)
             messages.success(request, log_message)
             break
-    else:  # this should never happen
-        iau_name = None
-        log_message = 'Problem getting response from TNS'
+    else:  # If neither 'classification_report', nor 'at_report' were in the feedback section
+        log_message = 'No recognized feedback in the TNS response.'
         logger.error(log_message)
         messages.error(request, log_message)
     return iau_name
@@ -197,6 +206,7 @@ def get_tns_report_reply(report_id, request):
     """
     tns_info = get_tns_credentials()
     reply_data = {'api_key': tns_info['api_key'], 'report_id': report_id}
+    iau_name = None
     attempts = 0
     # TNS Submissions return immediately with an id, which you must then check to see if the message
     # was processed, and if it was accepted or rejected. Here we check up to 10 times, waiting 1s
@@ -218,4 +228,6 @@ def get_tns_report_reply(report_id, request):
             break
         else:
             raise BadTnsRequest(f"TNS submission failed with status code {response.status_code}")
+    if not iau_name:
+        raise BadTnsRequest(f"TNS submission failed to be processed within 10 seconds. The report_id = {report_id}")
     return iau_name

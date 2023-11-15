@@ -36,6 +36,10 @@ class TNSReportForm(forms.Form):
     nondetection_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize choices from TNS API values, and set common defaults.
+        Also define the form layout using crispy_forms.
+        """
         super().__init__(*args, **kwargs)
         self.fields['reporting_group'].choices = get_tns_values('groups')
         self.fields['discovery_data_source'].choices = get_tns_values('groups')
@@ -162,6 +166,10 @@ class TNSClassifyForm(forms.Form):
     spectrum_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
 
     def __init__(self, *args, **kwargs):
+        """
+        Set initial choices for the classification form using the TNS API values and set default values.
+        Also define the form layout using crispy-forms.
+        """
         super().__init__(*args, **kwargs)
         self.fields['reporting_group'].choices = get_tns_values('groups')
         self.fields['instrument'].choices = get_tns_values('instruments')
@@ -241,6 +249,8 @@ class TNSClassifyForm(forms.Form):
                                 "observer": self.cleaned_data['observer'],
                                 "reducer": self.cleaned_data['reducer'],
                                 "spectypeid": self.cleaned_data['spectrum_type'],
+                                "ascii_file": tns_filenames.get('ascii_file', ''),
+                                "fits_file": tns_filenames.get('fits_file', ''),
                                 "remarks": self.cleaned_data['spectrum_remarks'],
                             },
                         }
@@ -248,11 +258,4 @@ class TNSClassifyForm(forms.Form):
                 }
             }
         }
-        if tns_filenames:
-            report_data['classification_report']['0']['spectra']['spectra-group']['0']['ascii_file'] = \
-                tns_filenames.get('ascii_file', '')
-            report_data['classification_report']['0']['spectra']['spectra-group']['0']['fits_file'] = \
-                tns_filenames.get('fits_file', '')
-        else:
-            raise BadTnsRequest("No files were uploaded to TNS")
         return report_data

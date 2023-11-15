@@ -6,6 +6,8 @@ from tom_tns.forms import TNSReportForm, TNSClassifyForm
 
 register = template.Library()
 
+
+# Define form Choices from Cached TNS Values
 TNS_FILTER_IDS = {name: fid for fid, name in get_tns_values('filters')}
 TNS_INSTRUMENT_IDS = {name: iid for iid, name in get_tns_values('instruments')}
 TNS_CLASSIFICATION_IDS = {name: cid for cid, name in get_tns_values('object_types')}
@@ -13,6 +15,10 @@ TNS_CLASSIFICATION_IDS = {name: cid for cid, name in get_tns_values('object_type
 
 @register.inclusion_tag('tom_tns/partials/tns_report_form.html', takes_context=True)
 def report_to_tns(context):
+    """
+    Build context data for TNS AT Report Form.
+    Includes the latest Photometry data if available.
+    """
     target = context['target']
     initial = {
         'ra': target.ra,
@@ -39,6 +45,10 @@ def report_to_tns(context):
 
 @register.inclusion_tag('tom_tns/partials/tns_classify_form.html', takes_context=True)
 def classify_with_tns(context):
+    """
+    Build context data for TNS Classification Form.
+    Includes the latest Photometry data if available.
+    """
     target = context['target']
     initial = {
         'object_name': target.name.replace('AT', '').replace('SN', ''),
