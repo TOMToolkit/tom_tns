@@ -1,7 +1,7 @@
 from django import template
 from django.conf import settings
 
-from tom_tns.tns_report import get_tns_credentials, get_tns_values
+from tom_tns.tns_report import get_tns_values
 from tom_tns.forms import TNSReportForm, TNSClassifyForm
 
 register = template.Library()
