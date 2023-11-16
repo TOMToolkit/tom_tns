@@ -21,11 +21,15 @@ def get_tns_credentials():
     Get the TNS credentials from settings.py.
     This should include the bot_id, bot_name, api_key, tns_base_url, and possibly group_name.
     """
-    tns_info = settings.BROKERS['TNS']
-    # Build TNS Marker using Bot info
-    tns_info['marker'] = 'tns_marker' + json.dumps({'tns_id': tns_info.get('bot_id', None),
-                                                    'type': 'bot',
-                                                    'name': tns_info.get('bot_name', None)})
+    try:
+        tns_info = settings.BROKERS['TNS']
+        # Build TNS Marker using Bot info
+        tns_info['marker'] = 'tns_marker' + json.dumps({'tns_id': tns_info.get('bot_id', None),
+                                                        'type': 'bot',
+                                                        'name': tns_info.get('bot_name', None)})
+    except (KeyError, AttributeError):
+        logger.error("TNS credentials not found in settings.py")
+        tns_info = {}
     return tns_info
 
 
