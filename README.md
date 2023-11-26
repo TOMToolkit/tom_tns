@@ -37,7 +37,7 @@ won't show up until after the next update.
     }
     ```
 
-5. Include the tom_nonlocalizedevent URLconf in your project `urls.py`:
+5. Include the tom_tns URLconf in your project `urls.py`:
    ```python
    urlpatterns = [
         ...
