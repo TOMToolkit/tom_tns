@@ -7,7 +7,7 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from guardian.mixins import PermissionListMixin
 
-from tom_tns.tns_report import send_tns_report, get_tns_report_reply, get_tns_credentials, BadTnsRequest
+from tom_tns.tns_api import send_tns_report, get_tns_report_reply, get_tns_credentials, BadTnsRequest
 from tom_targets.models import Target, TargetName
 
 import json

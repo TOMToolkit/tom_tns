@@ -3,8 +3,7 @@ import requests
 from django import forms
 from django.conf import settings
 
-from tom_tns.tns_report import get_tns_values, get_tns_credentials, get_reverse_tns_values, pre_upload_files_to_tns,\
-    BadTnsRequest
+from tom_tns.tns_api import get_tns_values, get_tns_credentials, get_reverse_tns_values, pre_upload_files_to_tns
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, HTML
