@@ -13,7 +13,7 @@ TOMtoolkit module for reporting transients to the TNS
     ```python
     INSTALLED_APPS = [
         ...
-        'tom_nonlocalizedevents',
+        'tom_tns',
     ]
     ```
 
