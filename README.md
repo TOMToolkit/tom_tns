@@ -45,5 +45,6 @@ won't show up until after the next update.
    ]
    ```
 
-Once configured, a `TNS` button should appear below the Target Name. 
+Once configured, a `TNS` button should appear below the Target Name.
+
 NOTE: Users who are using `tomtoolkit<2.15.12` will have to add the TNS button manually.
