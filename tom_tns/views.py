@@ -7,6 +7,7 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from guardian.mixins import PermissionListMixin
 
+from tom_tns import __version__
 from tom_tns.tns_api import send_tns_report, get_tns_report_reply, get_tns_credentials, BadTnsRequest
 from tom_targets.models import Target, TargetName
 
@@ -25,6 +26,7 @@ class TNSFormView(PermissionListMixin, TemplateView):
         target = Target.objects.get(pk=self.kwargs['pk'])
         context['tns_configured'] = bool(get_tns_credentials())
         context['target'] = target
+        context['version'] = __version__  # from tom_tns.__init__.py
         # We want to establish a default tab to display.
         # by default, we start on report, but change to classify if the target name starts with AT.
         # If the target has an SN name, we warn the user that the target has likely been classified already.
