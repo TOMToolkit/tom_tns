@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tom-tns"
-version = "0.1.0"
+version = "0.0.0"
 description = "TOMtoolkit module for reporting transients to the TNS"
 authors = ["Joseph Chatelain <jchatelain@lco.global>"]
 license = "GPL-3.0-or-later"
@@ -11,6 +11,8 @@ packages = [{include = "tom_tns"}]
 python = "^3.8.1,<3.12"
 tomtoolkit = "^2.14"
 
+[tool.poetry.group.lint.dependencies]
+flake8 = "~6.0"
 
 [tool.poetry-dynamic-versioning]
 enable = true
