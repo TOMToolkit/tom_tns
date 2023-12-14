@@ -1,0 +1,6 @@
+{% load crispy_forms_tags %}
+
+<form method="post" action="{% url 'tom_tns:submit-classify' pk=target.id %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% crispy form %}
+</form>

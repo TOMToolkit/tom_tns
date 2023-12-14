@@ -1,0 +1,6 @@
+{% load crispy_forms_tags %}
+
+<form method="post" action="{% url 'tom_tns:submit-report' pk=target.id %}">
+    {% csrf_token %}
+    {% crispy form %}
+</form>
