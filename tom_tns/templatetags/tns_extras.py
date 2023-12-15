@@ -30,8 +30,8 @@ def report_to_tns(context):
     if photometry.exists():
         reduced_datum = photometry.latest()
         initial['observation_date'] = reduced_datum.timestamp
-        initial['flux'] = reduced_datum.value['magnitude']
-        initial['flux_error'] = reduced_datum.value['error']
+        initial['flux'] = reduced_datum.value.get('magnitude')
+        initial['flux_error'] = reduced_datum.value.get('error')
         filter_name = reduced_datum.value.get('filter')
         if filter_name in TNS_FILTER_IDS:
             initial['filter'] = (TNS_FILTER_IDS[filter_name], filter_name)
@@ -47,23 +47,19 @@ def report_to_tns(context):
 def classify_with_tns(context):
     """
     Build context data for TNS Classification Form.
-    Includes the latest Photometry data if available.
+    Includes the latest Spectroscopy data if available.
     """
     target = context['target']
     initial = {
         'object_name': target.name.replace('AT', '').replace('SN', ''),
         'classifier': f'{context["request"].user.get_full_name()}, using {settings.TOM_NAME}',
     }
-    # Get photometry if available
-    photometry = target.reduceddatum_set.filter(data_type='photometry')
-    if photometry.exists():
-        reduced_datum = photometry.latest()
+    # Get spectroscopy if available
+    spectra = target.reduceddatum_set.filter(data_type='spectroscopy')
+    if spectra.exists():
+        reduced_datum = spectra.latest()
         initial['observation_date'] = reduced_datum.timestamp
-        initial['flux'] = reduced_datum.value['magnitude']
-        initial['flux_error'] = reduced_datum.value['error']
-        filter_name = reduced_datum.value.get('filter')
-        if filter_name in TNS_FILTER_IDS:
-            initial['filter'] = (TNS_FILTER_IDS[filter_name], filter_name)
+        initial['ascii_file'] = reduced_datum.data_product.data
         instrument_name = reduced_datum.value.get('instrument')
         if instrument_name in TNS_INSTRUMENT_IDS:
             initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
