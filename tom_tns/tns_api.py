@@ -23,10 +23,15 @@ def get_tns_credentials():
     """
     try:
         tns_info = settings.BROKERS['TNS']
-        # Build TNS Marker using Bot info
-        tns_info['marker'] = 'tns_marker' + json.dumps({'tns_id': tns_info.get('bot_id', None),
-                                                        'type': 'bot',
-                                                        'name': tns_info.get('bot_name', None)})
+
+        # Build TNS Marker using Bot info if API key is present
+        if tns_info.get('api_key', None):
+            tns_info['marker'] = 'tns_marker' + json.dumps({'tns_id': tns_info.get('bot_id', None),
+                                                            'type': 'bot',
+                                                            'name': tns_info.get('bot_name', None)})
+        else:
+            logger.error("TNS API key not found in settings.py")
+            tns_info = {}
     except (KeyError, AttributeError):
         logger.error("TNS credentials not found in settings.py")
         tns_info = {}
