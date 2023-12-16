@@ -23,7 +23,8 @@ def report_to_tns(context):
     initial = {
         'ra': target.ra,
         'dec': target.dec,
-        'reporter': f"{getattr(context['request'].user, 'get_full_name()', 'Anonymous User')}, using {settings.TOM_NAME}",
+        'reporter': f"{getattr(context['request'].user, 'get_full_name()', 'Anonymous User')},"
+                    f" using {settings.TOM_NAME}",
     }
     # Get photometry if available
     photometry = target.reduceddatum_set.filter(data_type='photometry')
