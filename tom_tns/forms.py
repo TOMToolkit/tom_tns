@@ -40,7 +40,6 @@ class TNSReportForm(forms.Form):
         Also define the form layout using crispy_forms.
         """
         super().__init__(*args, **kwargs)
-        self.fields['reporting_group'].choices = get_tns_values('groups')
         self.fields['discovery_data_source'].choices = get_tns_values('groups')
         self.fields['at_type'].choices = get_tns_values('at_types')
         self.fields['at_type'].initial = (1, "PSN")
@@ -53,13 +52,19 @@ class TNSReportForm(forms.Form):
         self.fields['flux_units'].choices = get_tns_values('units')
         self.fields['flux_units'].initial = (1, "ABMag")
 
-        # set initial group if tom_name is in the list of tns group names
-        tns_group_name = get_tns_credentials().get('group_name', None)
-        if not tns_group_name:
-            tns_group_name = settings.TOM_NAME
-        default_group = get_reverse_tns_values('groups', tns_group_name)
+        # set choices of reporting groups to list set in settings.py
+        bot_tns_group_names = get_tns_credentials().get('group_names', [])
+        if not bot_tns_group_names:
+            bot_tns_group_names = [settings.TOM_NAME]
+        tns_group_list = []
+        for bot_group_name in bot_tns_group_names:
+            if get_reverse_tns_values('groups', bot_group_name):
+                tns_group_list.append(get_reverse_tns_values('groups', bot_group_name))
+        tns_group_list.append(get_reverse_tns_values('groups', 'None'))
+        self.fields['reporting_group'].choices = tns_group_list
+        # set initial group for discovery source if tom_name is in the list of tns group names
+        default_group = tns_group_list[0]
         if default_group:
-            self.fields['reporting_group'].initial = default_group
             self.fields['discovery_data_source'].initial = default_group
 
         self.helper = FormHelper()
@@ -171,20 +176,22 @@ class TNSClassifyForm(forms.Form):
         Also define the form layout using crispy-forms.
         """
         super().__init__(*args, **kwargs)
-        self.fields['reporting_group'].choices = get_tns_values('groups')
         self.fields['instrument'].choices = get_tns_values('instruments')
         self.fields['instrument'].initial = (0, "Other")
         self.fields['classification'].choices = get_tns_values('object_types')
         self.fields['classification'].initial = (1, "SN")
         self.fields['spectrum_type'].choices = get_tns_values('spectra_types')
 
-        # set initial group if tom_name is in the list of tns group names
-        tns_group_name = get_tns_credentials().get('group_name', None)
-        if not tns_group_name:
-            tns_group_name = settings.TOM_NAME
-        default_group = get_reverse_tns_values('groups', tns_group_name)
-        if default_group:
-            self.fields['reporting_group'].initial = default_group
+        # set choices of reporting groups to list set in settings.py
+        bot_tns_group_names = get_tns_credentials().get('group_names', [])
+        if not bot_tns_group_names:
+            bot_tns_group_names = [settings.TOM_NAME]
+        tns_group_list = []
+        for bot_group_name in bot_tns_group_names:
+            if get_reverse_tns_values('groups', bot_group_name):
+                tns_group_list.append(get_reverse_tns_values('groups', bot_group_name))
+        tns_group_list.append(get_reverse_tns_values('groups', 'None'))
+        self.fields['reporting_group'].choices = tns_group_list
 
         self.helper = FormHelper()
         self.helper.layout = Layout(
