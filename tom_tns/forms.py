@@ -40,7 +40,7 @@ class TNSReportForm(forms.Form):
         Also define the form layout using crispy_forms.
         """
         super().__init__(*args, **kwargs)
-        self.fields['discovery_data_source'].choices = get_tns_values('groups')
+        self.fields['discovery_data_source'].choices = sorted(get_tns_values('groups'), key=lambda x: x[1])
         self.fields['at_type'].choices = get_tns_values('at_types')
         self.fields['at_type'].initial = (1, "PSN")
         self.fields['filter'].choices = get_tns_values('filters')
