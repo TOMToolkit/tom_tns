@@ -32,7 +32,7 @@ won't show up until after the next update.
             'bot_name': os.getenv('TNS_BOT_NAME', ''),  # This is the BOT name associated with the above ID
             'api_key': os.getenv('TNS_API_KEY', ''),  # This is the API key for the associated BOT         
             'tns_base_url': 'https://sandbox.wis-tns.org/api',  # This is the sandbox URL. Use https://www.wis-tns.org/api for live submission.
-            'group_name': os.getenv('TNS_GROUP_NAME', ''),  # Optional. Include if you wish to use an affiliated Group Name.
+            'group_names': ['bot_group', 'PI_group'],  # Optional List. Include if you wish to use any affiliated Group Names when reporting.
         },
     }
     ```
