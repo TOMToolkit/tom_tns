@@ -19,6 +19,7 @@ HERMES_FLUX_UNITS = [
     ("mJy", "mJy"), ("erg / s / cm² / Å", "erg / s / cm² / Å")
 ]
 
+
 class BaseReportForm(forms.Form):
     def is_set(self, field):
         if field in self.cleaned_data and self.cleaned_data[field]:
@@ -134,7 +135,8 @@ class TNSReportForm(BaseReportForm):
             Row(Column('photometry_remarks')),
             Row(HTML('<h4>Last Nondetection</h4>')),
             Alert(
-                content="""Fill out either the Archive information, or the Detection information for the last nondetection
+                content="""Fill out either the Archive information,
+                           or the Detection information for the last nondetection
                         """,
                 css_class='alert-warning'
             ),
@@ -146,18 +148,18 @@ class TNSReportForm(BaseReportForm):
                                   ),
                                ),
                 AccordionGroup('Detection information',
-                                Row(
+                               Row(
                                     Column('nondetection_observation_date'),
                                     Column('nondetection_instrument'),
                                     Column('nondetection_exposure_time'),
                                     Column('nondetection_observer'),
-                                   ),
-                                Row(
+                                  ),
+                               Row(
                                     Column('nondetection_flux'),
                                     Column('nondetection_flux_units'),
                                     Column('nondetection_filter'),
-                                   ),
-                                Row(Column('nondetection_remarks', css_class='col-md-12'))
+                                  ),
+                               Row(Column('nondetection_remarks', css_class='col-md-12'))
                                )
             ),
             Row(Column(Submit('submit', 'Submit Report'))),
@@ -170,7 +172,10 @@ class TNSReportForm(BaseReportForm):
             if any([not self.is_set(field) for field in [
                 'nondetection_flux', 'nondetection_instrument', 'nondetection_filter', 'nondetection_observation_date'
             ]]):
-                raise ValidationError("Must set either last nondetection archival information, or last nondetection flux, obsdate, filter and instrument")
+                raise ValidationError(
+                    "Must set either last nondetection archival information,"
+                    "or last nondetection flux, obsdate, filter and instrument"
+                )
 
     def generate_hermes_report(self):
         """
@@ -192,8 +197,10 @@ class TNSReportForm(BaseReportForm):
                     'new_discovery': True,
                     'discovery_info': {
                         'date': self.cleaned_data['discovery_date'].isoformat(),
-                        'discovery_source': dict(self.fields['discovery_data_source'].choices)[self.cleaned_data['discovery_data_source']],
-                        'reporting_group': dict(self.fields['reporting_group'].choices)[self.cleaned_data['reporting_group']],
+                        'discovery_source': dict(
+                            self.fields['discovery_data_source'].choices)[self.cleaned_data['discovery_data_source']],
+                        'reporting_group': dict(
+                            self.fields['reporting_group'].choices)[self.cleaned_data['reporting_group']],
                         'transient_type': dict(self.fields['at_type'].choices)[int(self.cleaned_data['at_type'])],
                     }
                 }],
@@ -220,11 +227,13 @@ class TNSReportForm(BaseReportForm):
             hermes_report['data']['photometry'][0]['limiting_brightness'] = self.cleaned_data['limiting_flux']
 
         if self.is_set('archiveid') and self.is_set('archival_remarks'):
-            hermes_report['data']['targets'][0]['discovery_info']['nondetection_source'] = dict(self.fields['archiveid'].choices)[self.cleaned_data['archiveid']]
-            hermes_report['data']['targets'][0]['discovery_info']['nondetection_comments'] = self.cleaned_data['archival_remarks']
+            discovery_info = hermes_report['data']['targets'][0]['discovery_info']
+            discovery_info['nondetection_source'] = dict(
+                self.fields['archiveid'].choices)[self.cleaned_data['archiveid']]
+            discovery_info['nondetection_comments'] = self.cleaned_data['archival_remarks']
         elif all([self.is_set(field) for field in [
-                'nondetection_flux', 'nondetection_instrument', 'nondetection_filter', 'nondetection_observation_date'
-            ]]):
+            'nondetection_flux', 'nondetection_instrument', 'nondetection_filter', 'nondetection_observation_date'
+        ]]):
             nondetection = {
                 'limiting_brightness': self.cleaned_data['nondetection_flux'],
                 'limiting_brightness_unit': self.cleaned_data['nondetection_flux_units'],
@@ -409,7 +418,8 @@ class TNSClassifyForm(BaseReportForm):
                     'dec': self.cleaned_data['dec'],
                     'new_discovery': False,
                     'discovery_info': {
-                        'reporting_group': dict(self.fields['reporting_group'].choices)[self.cleaned_data['reporting_group']]
+                        'reporting_group': dict(
+                            self.fields['reporting_group'].choices)[self.cleaned_data['reporting_group']]
                     }
                 }],
                 'spectroscopy': [{
