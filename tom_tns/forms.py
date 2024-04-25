@@ -1,4 +1,5 @@
 import requests
+import os
 
 from django import forms
 from django.conf import settings
@@ -168,7 +169,7 @@ class TNSReportForm(BaseReportForm):
     def clean(self):
         super().clean()
         # Either the archival info or nondetection flux info must be set for a valid TNS submission
-        if not self.is_set('archiveid') or not self.is_set('archival_remarks'):
+        if not self.is_set('archive') or not self.is_set('archival_remarks'):
             if any([not self.is_set(field) for field in [
                 'nondetection_flux', 'nondetection_instrument', 'nondetection_filter', 'nondetection_observation_date'
             ]]):
@@ -184,7 +185,7 @@ class TNSReportForm(BaseReportForm):
         Returns the report as a Dict to be sent as JSON
         """
         hermes_report = {
-            'topic': 'hermes.discovery',
+            'topic': 'hermes.test',
             'title': f'{self.cleaned_data["object_name"]} TNS discovery report',
             'submit_to_tns': True,
             'submitter': self.cleaned_data['submitter'],
@@ -226,10 +227,10 @@ class TNSReportForm(BaseReportForm):
         if self.is_set('limiting_flux'):
             hermes_report['data']['photometry'][0]['limiting_brightness'] = self.cleaned_data['limiting_flux']
 
-        if self.is_set('archiveid') and self.is_set('archival_remarks'):
+        if self.is_set('archive') and self.is_set('archival_remarks'):
             discovery_info = hermes_report['data']['targets'][0]['discovery_info']
             discovery_info['nondetection_source'] = dict(
-                self.fields['archiveid'].choices)[self.cleaned_data['archiveid']]
+                self.fields['archive'].choices)[self.cleaned_data['archive']]
             discovery_info['nondetection_comments'] = self.cleaned_data['archival_remarks']
         elif all([self.is_set(field) for field in [
             'nondetection_flux', 'nondetection_instrument', 'nondetection_filter', 'nondetection_observation_date'
@@ -406,7 +407,7 @@ class TNSClassifyForm(BaseReportForm):
         else:
             fits_file = None
         hermes_report = {
-            'topic': 'hermes.classification',
+            'topic': 'hermes.test',
             'title': f'{self.cleaned_data["object_name"]} TNS classification report',
             'submit_to_tns': True,
             'submitter': self.cleaned_data['submitter'],
@@ -431,7 +432,7 @@ class TNSClassifyForm(BaseReportForm):
                     'observer': self.cleaned_data['observer'],
                     'file_info': [
                         {
-                            'name': ascii_file.name,
+                            'name': os.path.basename(ascii_file.name),
                             'description': self.cleaned_data.get('ascii_file_description', '')
                         }
                     ]
@@ -449,7 +450,7 @@ class TNSClassifyForm(BaseReportForm):
             hermes_report['data']['spectroscopy'][0]['exposure_time'] = self.cleaned_data['exposure_time']
         if fits_file:
             hermes_report['data']['spectroscopy'][0]['file_info'].append({
-                'name': fits_file.name,
+                'name': os.path.basename(fits_file.name),
                 'description': self.cleaned_data.get('fits_file_description', '')
             })
             files.append(fits_file)
