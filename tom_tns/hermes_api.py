@@ -53,4 +53,4 @@ def submit_to_hermes(hermes_message, files, request):
             error_msg += f': {repr(e)}'
         logger.error(error_msg)
         messages.error(request, error_msg)
-    return None    
+    return None
