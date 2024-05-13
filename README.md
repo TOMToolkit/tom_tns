@@ -41,7 +41,7 @@ TOMtoolkit module for reporting transients to the TNS
                 'c': 'Clear',
                 ...
             },  # Optional mapping from your reduced datum filter values to TNS filter options.
-            'default_authors': 'Foo Bar <foo@bar.com>'  # Optional default authors string to populate the author fields for tns submission. If not specified, defaults to saying "<logged in user> using <tom name>".
+            'default_authors': 'Foo Bar <foo@bar.com>, Rando Calrissian, et al.'  # Optional default authors string to populate the author fields for tns submission. If not specified, defaults to saying "<logged in user> using <tom name>".
         },
     }
     ```
@@ -59,7 +59,7 @@ TOMtoolkit module for reporting transients to the TNS
             'DISPLAY_NAME': 'hermes',
             'BASE_URL': 'https://hermes-dev.lco.global/',
             'HERMES_API_KEY': 'YourHermesAPITokenHere',
-            'DEFAULT_AUTHORS': 'String of default author list for your submissions heres',  # Optional default authors string to populate the author fields for tns submission. If not specified, defaults to saying "<logged in user> using <tom name>".
+            'DEFAULT_AUTHORS': 'Foo Bar <foo@bar.com>, Rando Calrissian, et al.',  # Optional default authors string to populate the author fields for tns submission. If not specified, defaults to saying "<logged in user> using <tom name>".
             'USER_TOPICS': ['hermes.discovery', 'hermes.classification', ...]  # This is a list of hermes topics you will be allowed to share on. hermes.discovery and hermes.classification are automatically used for TNS submissions of those types.
             'TNS_GROUP_NAMES': ['bot_group', 'PI_group'],  # Optional List. Include if you wish to use any affiliated Group Names when reporting to TNS.
             'FILTER_MAPPING': {
