@@ -16,6 +16,33 @@ class BadTnsRequest(Exception):
     pass
 
 
+def submit_through_hermes():
+    """ Check if hermes credentials exist and are setup so TNS messages should be sent through hermes
+        Returns True if it should go through hermes, False if it should go directly to TNS
+    """
+    if hasattr(settings, 'DATA_SHARING') and settings.DATA_SHARING.get('hermes', {}).get('ENABLE_TNS', False):
+        return True
+    return False
+
+
+def map_filter_to_tns(filter):
+    """ Checks if a filter mapping was set in the settings, and if so returns the mapped value for the filter passed in
+    """
+    if submit_through_hermes():
+        return settings.DATA_SHARING.get('hermes', {}).get('FILTER_MAPPING', {}).get(filter)
+    else:
+        return settings.BROKERS.get('TNS', {}).get('filter_mapping', {}).get(filter)
+
+
+def default_authors():
+    """ Returns default authors if set in the settings, otherwise empty string.
+    """
+    if submit_through_hermes():
+        return settings.DATA_SHARING.get('hermes', {}).get('DEFAULT_AUTHORS', '')
+    else:
+        return settings.BROKERS.get('TNS', {}).get('default_authors', '')
+
+
 def get_tns_credentials():
     """
     Get the TNS credentials from settings.py.
