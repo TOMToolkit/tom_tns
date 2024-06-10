@@ -110,7 +110,8 @@ def populate_tns_values():
     reversed_tns_values = {}
     if submit_through_hermes():
         # Get the tns values from the HERMES api
-        hermes_tns_options_url = urljoin(settings.DATA_SHARING.get('hermes', {}).get('BASE_URL', ''), 'api/v0/tns_options/')
+        hermes_tns_options_url = urljoin(settings.DATA_SHARING.get('hermes', {}).get(
+            'BASE_URL', ''), 'api/v0/tns_options/')
         headers = {'Authorization': f"Token {settings.DATA_SHARING.get('hermes', {}).get('HERMES_API_KEY', '')}"}
         try:
             resp = requests.get(hermes_tns_options_url, headers=headers)
