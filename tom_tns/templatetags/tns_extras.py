@@ -98,7 +98,7 @@ def classify_with_tns(context):
             reduced_datum = spectra.latest()
     if reduced_datum:
         initial['observation_date'] = reduced_datum.timestamp
-        if reduced_datum.data_product.get_file_extension().lower() in ['.ascii', '.txt']:
+        if reduced_datum.data_product and reduced_datum.data_product.get_file_extension().lower() in ['.ascii', '.txt']:
             initial['ascii_file'] = (reduced_datum.data_product.pk, reduced_datum.data_product.get_file_name())
         instrument_name = reduced_datum.value.get('instrument')
         if instrument_name in TNS_INSTRUMENT_IDS:

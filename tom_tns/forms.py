@@ -5,7 +5,7 @@ from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
-from tom_tns.tns_api import (get_tns_values, get_tns_credentials, get_reverse_tns_values,
+from tom_tns.tns_api import (get_tns_values, group_names, get_reverse_tns_values,
                              pre_upload_files_to_tns, submit_through_hermes)
 from tom_dataproducts.models import DataProduct
 
@@ -91,7 +91,7 @@ class TNSReportForm(BaseReportForm):
             self.fields['nondetection_flux_units'].initial = (1, "ABMag")
 
         # set choices of reporting groups to list set in settings.py
-        bot_tns_group_names = get_tns_credentials().get('group_names', [])
+        bot_tns_group_names = group_names()
         if not bot_tns_group_names:
             bot_tns_group_names = [settings.TOM_NAME]
         tns_group_list = []
@@ -340,7 +340,7 @@ class TNSClassifyForm(BaseReportForm):
         self.fields['fits_file'].choices = kwargs['initial']['fits_file_choices']
 
         # set choices of reporting groups to list set in settings.py
-        bot_tns_group_names = get_tns_credentials().get('group_names', [])
+        bot_tns_group_names = group_names()
         if not bot_tns_group_names:
             bot_tns_group_names = [settings.TOM_NAME]
         tns_group_list = []
