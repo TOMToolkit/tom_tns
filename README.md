@@ -73,7 +73,7 @@ TOMtoolkit module for reporting transients to the TNS
     ```
 
 
-4. Include the tom_tns URLconf in your project `urls.py`:
+4. Include the tom_tns URLconf in your project `urls.py` if you are using a tomtoolkit version <= 2.18:
    ```python
    urlpatterns = [
         ...
