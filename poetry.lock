@@ -1928,13 +1928,13 @@ test = ["pytest", "tornado (>=4.5)", "typeguard"]
 
 [[package]]
 name = "tomtoolkit"
-version = "2.18.5"
+version = "2.19.3"
 description = "TOM Toolkit and base modules"
 optional = false
 python-versions = "<3.12,>=3.8.1"
 files = [
-    {file = "tomtoolkit-2.18.5-py3-none-any.whl", hash = "sha256:1ed926029c34ce7b04668bcb4910ecf5087599556d3741fe7a816f598ddabdff"},
-    {file = "tomtoolkit-2.18.5.tar.gz", hash = "sha256:4ced9a856aa67bc2d6c79920d91a0a3338e261985010b782bbf74b65d8e484a5"},
+    {file = "tomtoolkit-2.19.3-py3-none-any.whl", hash = "sha256:3fe04175588fe1ee141c5b764f01992f5432b011a23d8ae8a2ed74ab81bb30ca"},
+    {file = "tomtoolkit-2.19.3.tar.gz", hash = "sha256:8106b7a4dfdb07c5ad974f9d9d2f65aff3db55f65fae226d9a3f50a700d676e7"},
 ]
 
 [package.dependencies]
@@ -1955,7 +1955,7 @@ django-extensions = ">=3,<4"
 django-filter = ">=23,<25"
 django-gravatar2 = ">=1,<2"
 django-guardian = ">=2,<3"
-djangorestframework = "<4"
+djangorestframework = ">=3.15,<4"
 dramatiq = {version = "<2.0.0", extras = ["redis", "watch"]}
 fits2image = ">=0.4,<0.5"
 markdown = "<4"
