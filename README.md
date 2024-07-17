@@ -86,7 +86,7 @@ Once configured, a `TNS` button should appear below the Target Name on the defau
 If you have customized the Target Details page of your TOM, or if you would like to add entrypoints to the tom_tns form from other TOM pages, including those referencing a specific data product or reduced datum's values, then you can do that by including the code below somewhere in your templates:
 
 ```html
- <a href="{% url tns:report-tns pk=target.id datum_pk=datum.pk %}" title=TNS class="btn  btn-info">Submit to TNS</a>
+ <a href="{% url 'tns:report-tns' pk=target.id datum_pk=datum.pk %}" title=TNS class="btn  btn-info">Submit to TNS</a>
 ```
 
 The datum_pk is optional. If it is not specified, the latest photometry reduced datum will be used to pre-fill the discovery report form, and the latest spectroscopy reduced datum will be used to pre-fill the classification report form. If you specifiy a datum pk, then that datum and associated data product will be used to pre-fill the proper forms.

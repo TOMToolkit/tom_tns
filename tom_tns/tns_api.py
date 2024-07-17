@@ -43,6 +43,15 @@ def default_authors():
         return settings.BROKERS.get('TNS', {}).get('default_authors', '')
 
 
+def group_names():
+    """ Returns the Group names list from settings, either from Hermes config or TNS config
+    """
+    if submit_through_hermes():
+        return settings.DATA_SHARING.get('hermes', {}).get('GROUP_NAMES', [])
+    else:
+        return settings.BROKERS.get('TNS', {}).get('group_names', [])
+
+
 def get_tns_credentials():
     """
     Get the TNS credentials from settings.py.
@@ -72,7 +81,7 @@ def get_tns_values(option_list):
     all_tns_values = cache.get("all_tns_values", {})
     if not all_tns_values:
         all_tns_values, _ = populate_tns_values()
-    selected_values = all_tns_values[option_list]
+    selected_values = all_tns_values.get(option_list, [])
     tuple_list = []
     if isinstance(selected_values, list):
         tuple_list = [(i, v) for i, v in enumerate(selected_values)]
@@ -97,24 +106,38 @@ def get_reverse_tns_values(option_list, value):
 
 def populate_tns_values():
     """pull all the values from the TNS API and Cache for an hour"""
-
-    # Need to spoof a web based user agent or TNS will block the request :(
-    SPOOF_USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0.'
-
-    # Use sandbox URL if no url found in settings.py
-    tns_base_url = get_tns_credentials().get('tns_base_url', 'https://sandbox.wis-tns.org/api')
     all_tns_values = {}
     reversed_tns_values = {}
-    try:
-        resp = requests.get(urljoin(tns_base_url, 'api/values/'),
-                            headers={'user-agent': SPOOF_USER_AGENT})
-        resp.raise_for_status()
-        all_tns_values = resp.json().get('data', {})
+    if submit_through_hermes():
+        # Get the tns values from the HERMES api
+        hermes_tns_options_url = urljoin(settings.DATA_SHARING.get('hermes', {}).get(
+            'BASE_URL', ''), 'api/v0/tns_options/')
+        headers = {'Authorization': f"Token {settings.DATA_SHARING.get('hermes', {}).get('HERMES_API_KEY', '')}"}
+        try:
+            resp = requests.get(hermes_tns_options_url, headers=headers)
+            resp.raise_for_status()
+            all_tns_values = resp.json()
+        except Exception as e:
+            logging.warning(f"Failed to retrieve tns values from Hermes: {repr(e)}")
+    else:
+        # Need to spoof a web based user agent or TNS will block the request :(
+        SPOOF_USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0.'
+
+        # Use sandbox URL if no url found in settings.py
+        tns_base_url = get_tns_credentials().get('tns_base_url', 'https://sandbox.wis-tns.org/api')
+        try:
+            resp = requests.get(urljoin(tns_base_url, 'api/values/'),
+                                headers={'user-agent': SPOOF_USER_AGENT})
+            resp.raise_for_status()
+            all_tns_values = resp.json().get('data', {})
+
+        except Exception as e:
+            logging.warning(f"Failed to retrieve tns values: {repr(e)}")
+
+    if all_tns_values:
         reversed_tns_values = reverse_tns_values(all_tns_values)
         cache.set("all_tns_values", all_tns_values, 3600)
         cache.set("reverse_tns_values", reversed_tns_values, 3600)
-    except Exception as e:
-        logging.warning(f"Failed to retrieve tns values: {repr(e)}")
     return all_tns_values, reversed_tns_values
 
 

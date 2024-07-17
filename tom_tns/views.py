@@ -35,7 +35,7 @@ class TNSFormView(PermissionListMixin, TemplateView):
                     context['default_form'] = 'classify'
             except ReducedDatum.DoesNotExist:
                 pass
-        context['tns_configured'] = bool(get_tns_credentials())
+        context['tns_configured'] = submit_through_hermes() or bool(get_tns_credentials())
         context['target'] = target
         context['version'] = __version__  # from tom_tns.__init__.py
         # We want to establish a default tab to display.
