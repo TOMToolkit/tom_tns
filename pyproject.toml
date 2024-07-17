@@ -9,10 +9,10 @@ packages = [{include = "tom_tns"}]
 
 [tool.poetry.dependencies]
 python = "^3.8.1,<3.12"
-tomtoolkit = "^2.15"
+tomtoolkit = "^2.18"
 
 [tool.poetry.group.lint.dependencies]
-flake8 = ">=6.0,<7.1"
+flake8 = ">=6.0,<7.2"
 
 [tool.poetry-dynamic-versioning]
 enable = true
