@@ -1928,13 +1928,13 @@ test = ["pytest", "tornado (>=4.5)", "typeguard"]
 
 [[package]]
 name = "tomtoolkit"
-version = "2.19.3"
+version = "2.19.4"
 description = "TOM Toolkit and base modules"
 optional = false
 python-versions = "<3.12,>=3.8.1"
 files = [
-    {file = "tomtoolkit-2.19.3-py3-none-any.whl", hash = "sha256:3fe04175588fe1ee141c5b764f01992f5432b011a23d8ae8a2ed74ab81bb30ca"},
-    {file = "tomtoolkit-2.19.3.tar.gz", hash = "sha256:8106b7a4dfdb07c5ad974f9d9d2f65aff3db55f65fae226d9a3f50a700d676e7"},
+    {file = "tomtoolkit-2.19.4-py3-none-any.whl", hash = "sha256:1ed35660e455cb20410500926ecdf5f86335c868b3f05360eb404351874e2c9a"},
+    {file = "tomtoolkit-2.19.4.tar.gz", hash = "sha256:34587e04008d9d046a90860d36f2ec731d4ef2f437fca75cde7f848a048a4c7d"},
 ]
 
 [package.dependencies]
