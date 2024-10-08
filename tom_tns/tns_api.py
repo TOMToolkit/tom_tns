@@ -35,7 +35,8 @@ def map_filter_to_tns(filter):
 
 
 def map_instrument_to_tns(instrument):
-    """ Checks if a instrument mapping was set in the settings, and if so returns the mapped value for the instrument passed in
+    """ Checks if a instrument mapping was set in the settings, and if so returns the
+        mapped value for the instrument passed in
     """
     if submit_through_hermes():
         return settings.DATA_SHARING.get('hermes', {}).get('INSTRUMENT_MAPPING', {}).get(instrument)
