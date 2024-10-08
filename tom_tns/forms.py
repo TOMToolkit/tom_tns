@@ -31,6 +31,7 @@ class BaseReportForm(forms.Form):
 class TNSReportForm(BaseReportForm):
     submitter = forms.CharField(required=True, widget=forms.HiddenInput())
     object_name = forms.CharField(required=True, widget=forms.HiddenInput())
+    telescope = forms.CharField(required=False, widget=forms.HiddenInput())
     ra = forms.FloatField(label='R.A.')
     dec = forms.FloatField(label='Dec.')
     reporting_group = forms.ChoiceField(choices=[])
@@ -107,7 +108,7 @@ class TNSReportForm(BaseReportForm):
 
         self.helper = FormHelper()
         self.helper.layout = Layout(
-            'submitter', 'object_name',
+            'submitter', 'object_name', 'telescope',
             Row(
                 Column('reporter', css_class='col-md-6'),
                 Column('reporting_group'),
@@ -226,6 +227,8 @@ class TNSReportForm(BaseReportForm):
             hermes_report['data']['photometry'][0]['observer'] = self.cleaned_data['observer']
         if self.is_set('limiting_flux'):
             hermes_report['data']['photometry'][0]['limiting_brightness'] = self.cleaned_data['limiting_flux']
+        if self.is_set('telescope'):
+            hermes_report['data']['photometry'][0]['telescope'] = self.cleaned_data['telescope']
 
         if self.is_set('archive') and self.is_set('archival_remarks'):
             discovery_info = hermes_report['data']['targets'][0]['discovery_info']
@@ -303,6 +306,7 @@ class TNSReportForm(BaseReportForm):
 
 class TNSClassifyForm(BaseReportForm):
     submitter = forms.CharField(required=False, widget=forms.HiddenInput())
+    telescope = forms.CharField(required=False, widget=forms.HiddenInput())
     object_name = forms.CharField(required=False)
     ra = forms.FloatField(required=False, widget=forms.HiddenInput())
     dec = forms.FloatField(required=False, widget=forms.HiddenInput())
@@ -352,7 +356,7 @@ class TNSClassifyForm(BaseReportForm):
 
         self.helper = FormHelper()
         self.helper.layout = Layout(
-            'submitter', 'ra', 'dec',
+            'submitter', 'ra', 'dec', 'telescope',
             Row(
                 Column('classifier', css_class='col-md-8'),
                 Column('reporting_group'),
@@ -440,6 +444,8 @@ class TNSClassifyForm(BaseReportForm):
             },
         }
         files = [ascii_file]
+        if self.is_set('telescope'):
+            hermes_report['data']['spectroscopy'][0]['telescope'] = self.cleaned_data['telescope']
         if self.is_set('redshift'):
             hermes_report['data']['targets'][0]['redshift'] = self.cleaned_data['redshift']
         if self.is_set('classification_remarks'):

@@ -34,6 +34,15 @@ def map_filter_to_tns(filter):
         return settings.BROKERS.get('TNS', {}).get('filter_mapping', {}).get(filter)
 
 
+def map_instrument_to_tns(instrument):
+    """ Checks if a instrument mapping was set in the settings, and if so returns the mapped value for the instrument passed in
+    """
+    if submit_through_hermes():
+        return settings.DATA_SHARING.get('hermes', {}).get('INSTRUMENT_MAPPING', {}).get(instrument)
+    else:
+        return settings.BROKERS.get('TNS', {}).get('instrument_mapping', {}).get(instrument)
+
+
 def default_authors():
     """ Returns default authors if set in the settings, otherwise empty string.
     """

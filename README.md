@@ -41,6 +41,10 @@ TOMtoolkit module for reporting transients to the TNS
                 'c': 'Clear',
                 ...
             },  # Optional mapping from your reduced datum filter values to TNS filter options.
+            'instrument_mapping': {
+                'fa20': 'LCO1m - Sinistro',
+                ...
+            },  # Optional mapping from your reduced datum instrument name to TNS instrument names
             'default_authors': 'Foo Bar <foo@bar.com>, Rando Calrissian, et al.'  # Optional default authors string to populate the author fields for tns submission. If not specified, defaults to saying "<logged in user> using <tom name>".
         },
     }
@@ -62,11 +66,16 @@ TOMtoolkit module for reporting transients to the TNS
             'DEFAULT_AUTHORS': 'Foo Bar <foo@bar.com>, Rando Calrissian, et al.',  # Optional default authors string to populate the author fields for tns submission. If not specified, defaults to saying "<logged in user> using <tom name>".
             'USER_TOPICS': ['hermes.discovery', 'hermes.classification', ...]  # This is a list of hermes topics you will be allowed to share on. hermes.discovery and hermes.classification are automatically used for TNS submissions of those types.
             'TNS_GROUP_NAMES': ['bot_group', 'PI_group'],  # Optional List. Include if you wish to use any affiliated Group Names when reporting to TNS.
+            'DATA_CONVERTER_CLASS': 'tom_dataproducts.alertstreams.hermes.HermesDataConverter', # Optional classpath to custom implementation of HermesDataConverter class, which is used to prefill TNS submission form fields with values stored in your TOM for your ReducedDatums.
             'FILTER_MAPPING': {
                 'o': 'Other',
                 'c': 'Clear',
                 ...
             },  # Optional mapping from your reduced datum filter values to TNS filter options.
+            'INSTRUMENT_MAPPING': {
+                'fa20': 'LCO1m - Sinistro',
+                ...
+            },  # Optional mapping from your reduced datum instrument name to TNS instrument names
             'ENABLE_TNS': False  # Set to True to enable TNS submissions through Hermes
         },
     }
