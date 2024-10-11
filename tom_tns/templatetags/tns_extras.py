@@ -39,11 +39,14 @@ def report_to_tns(context):
     reduced_datum = None
     if 'datum' in context and context['datum'].data_type == 'photometry':
         reduced_datum = context['datum']
+        preset_datum = True
     else:
         # Get photometry if available
         photometry = target.reduceddatum_set.filter(data_type='photometry')
         if photometry.exists():
             reduced_datum = photometry.latest()
+        preset_datum = False
+
     if reduced_datum:
         hermes_datum_converter = get_hermes_data_converter_class()(validate=False)
         phot_data = hermes_datum_converter.get_hermes_photometry(reduced_datum)
@@ -53,7 +56,13 @@ def report_to_tns(context):
         instrument_name = map_instrument_to_tns(phot_data.get('instrument', ''))
         if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
             initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
-        if phot_data.get('telescope'):
+        else:
+            # Try the hermes 'telescope' field if instrument is not present or doesn't match TNS
+            instrument_name = map_instrument_to_tns(phot_data.get('telescope', ''))
+            if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
+                initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
+        if preset_datum and phot_data.get('telescope'):
+            # Only set the telescope if a preset datum was specified in loading the form
             initial['telescope'] = phot_data['telescope']
         mapped_filter = map_filter_to_tns(phot_data.get('bandpass', ''))
         if mapped_filter and mapped_filter in TNS_FILTER_IDS:
@@ -109,10 +118,12 @@ def classify_with_tns(context):
     reduced_datum = None
     if 'datum' in context and context['datum'].data_type == 'spectroscopy':
         reduced_datum = context['datum']
+        preset_datum = True
     else:
         spectra = target.reduceddatum_set.filter(data_type='spectroscopy')
         if spectra.exists():
             reduced_datum = spectra.latest()
+        preset_datum = False
     if reduced_datum:
         hermes_datum_converter = get_hermes_data_converter_class()(validate=False)
         spectra_data = hermes_datum_converter.get_hermes_spectroscopy(reduced_datum)
@@ -122,7 +133,13 @@ def classify_with_tns(context):
         instrument_name = map_instrument_to_tns(spectra_data.get('instrument', ''))
         if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
             initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
-        if spectra_data.get('telescope'):
+        else:
+            # Try the hermes 'telescope' field if instrument is not present or doesn't match TNS
+            instrument_name = map_instrument_to_tns(spectra_data.get('telescope', ''))
+            if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
+                initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
+        if preset_datum and spectra_data.get('telescope'):
+            # Only set the telescope if a preset datum was specified in loading the form
             initial['telescope'] = spectra_data['telescope']
         if spectra_data.get('reducer'):
             initial['reducer'] = spectra_data['reducer']
