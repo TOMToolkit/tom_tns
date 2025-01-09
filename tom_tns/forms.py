@@ -337,7 +337,7 @@ class TNSClassifyForm(BaseReportForm):
         super().__init__(*args, **kwargs)
         self.fields['instrument'].choices = get_tns_values('instruments')
         self.fields['instrument'].initial = (0, "Other")
-        self.fields['classification'].choices = get_tns_values('object_types')
+        self.fields['classification'].choices = get_tns_values('objtypes')
         self.fields['classification'].initial = (1, "SN")
         self.fields['spectrum_type'].choices = get_tns_values('spectra_types')
         self.fields['ascii_file'].choices = kwargs['initial']['ascii_file_choices']
