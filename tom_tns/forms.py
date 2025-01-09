@@ -69,7 +69,7 @@ class TNSReportForm(BaseReportForm):
         super().__init__(*args, **kwargs)
         self.fields['discovery_data_source'].choices = sorted(get_tns_values('groups'), key=lambda x: x[1])
         self.fields['at_type'].choices = get_tns_values('at_types')
-        self.fields['at_type'].initial = (1, "PSN")
+        self.fields['at_type'].initial = (1, "PSN - Possible SN")
         self.fields['filter'].choices = get_tns_values('filters')
         self.fields['filter'].initial = ("22", "r-Sloan")
         self.fields['nondetection_filter'].choices = get_tns_values('filters')
@@ -271,8 +271,8 @@ class TNSReportForm(BaseReportForm):
                     "dec": {
                         "value": self.cleaned_data['dec'],
                     },
-                    "reporting_group_id": self.cleaned_data['reporting_group'],
-                    "discovery_data_source_id": self.cleaned_data['discovery_data_source'],
+                    "reporting_groupid": self.cleaned_data['reporting_group'],
+                    "data_source_groupid": self.cleaned_data['discovery_data_source'],
                     "reporter": self.cleaned_data['reporter'],
                     "discovery_datetime": self.cleaned_data['discovery_date'].strftime('%Y-%m-%d %H:%M:%S'),
                     "at_type": self.cleaned_data['at_type'],
@@ -288,9 +288,9 @@ class TNSReportForm(BaseReportForm):
                                 "obsdate": self.cleaned_data['observation_date'].strftime('%Y-%m-%d %H:%M:%S'),
                                 "flux": self.cleaned_data['flux'],
                                 "flux_error": self.cleaned_data['flux_error'],
-                                "flux_units": self.cleaned_data['flux_units'],
-                                "filter_value": self.cleaned_data['filter'],
-                                "instrument_value": self.cleaned_data['instrument'],
+                                "flux_unitid": self.cleaned_data['flux_units'],
+                                "filterid": self.cleaned_data['filter'],
+                                "instrumentid": self.cleaned_data['instrument'],
                                 "limiting_flux": self.cleaned_data['limiting_flux'],
                                 "exptime": self.cleaned_data['exposure_time'],
                                 "observer": self.cleaned_data['observer'],
