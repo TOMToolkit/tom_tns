@@ -134,9 +134,9 @@ def populate_tns_values():
         SPOOF_USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0.'
 
         # Use sandbox URL if no url found in settings.py
-        tns_base_url = get_tns_credentials().get('tns_base_url', 'https://sandbox.wis-tns.org/api')
+        tns_base_url = get_tns_credentials().get('tns_base_url', 'https://sandbox.wis-tns.org/')
         try:
-            resp = requests.get(urljoin(tns_base_url, '/get/values/'),
+            resp = requests.get(urljoin(tns_base_url, 'api/get/values/'),
                                 headers={'user-agent': SPOOF_USER_AGENT})
             resp.raise_for_status()
             all_tns_values = resp.json().get('data', {})
@@ -197,7 +197,7 @@ def pre_upload_files_to_tns(files):
     # build request parameters
     tns_marker = tns_credentials['marker']
     upload_data = {'api_key': tns_credentials['api_key']}
-    response = requests.post(tns_credentials['tns_base_url'] + '/set/file-upload', headers={'User-Agent': tns_marker},
+    response = requests.post(urljoin(tns_credentials['tns_base_url'], 'api/set/file-upload'), headers={'User-Agent': tns_marker},
                              data=upload_data, files=file_load)
     response.raise_for_status()
     # If successful, TNS returns a list of new filenames
@@ -223,7 +223,7 @@ def send_tns_report(data):
     """
     tns_info = get_tns_credentials()
     json_data = {'api_key': tns_info['api_key'], 'data': data}
-    response = requests.post(tns_info['tns_base_url'] + '/set/bulk-report',
+    response = requests.post(urljoin(tns_info['tns_base_url'], 'api/set/bulk-report'),
                              headers={'User-Agent': tns_info['marker']},
                              data=json_data)
     response.raise_for_status()
@@ -281,7 +281,7 @@ def get_tns_report_reply(report_id, request):
     # was processed, and if it was accepted or rejected. Here we check up to 10 times, waiting 1s
     # between checks. Under normal circumstances, it should be processed within a few seconds.
     while attempts < 10:
-        response = requests.post(tns_info['tns_base_url'] + '/get/bulk-report-reply',
+        response = requests.post(urljoin(tns_info['tns_base_url'], 'api/get/bulk-report-reply'),
                                  headers={'User-Agent': tns_info['marker']}, data=reply_data)
         attempts += 1
         # A 404 response means the report has not been processed yet
