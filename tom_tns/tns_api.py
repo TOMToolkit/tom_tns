@@ -197,7 +197,8 @@ def pre_upload_files_to_tns(files):
     # build request parameters
     tns_marker = tns_credentials['marker']
     upload_data = {'api_key': tns_credentials['api_key']}
-    response = requests.post(urljoin(tns_credentials['tns_base_url'], 'api/set/file-upload'), headers={'User-Agent': tns_marker},
+    response = requests.post(urljoin(tns_credentials['tns_base_url'], 'api/set/file-upload'),
+                             headers={'User-Agent': tns_marker},
                              data=upload_data, files=file_load)
     response.raise_for_status()
     # If successful, TNS returns a list of new filenames
