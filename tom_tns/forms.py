@@ -29,7 +29,7 @@ class BaseReportForm(forms.Form):
 
 
 class TNSReportForm(BaseReportForm):
-    submitter = forms.CharField(required=True, widget=forms.HiddenInput())
+    submitter = forms.CharField(required=False, widget=forms.HiddenInput())
     object_name = forms.CharField(required=True, widget=forms.HiddenInput())
     telescope = forms.CharField(required=False, widget=forms.HiddenInput())
     ra = forms.FloatField(label='R.A.')
