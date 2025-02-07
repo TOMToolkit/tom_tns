@@ -12,7 +12,7 @@ register = template.Library()
 # Define form Choices from Cached TNS Values
 TNS_FILTER_IDS = {name: fid for fid, name in get_tns_values('filters')}
 TNS_INSTRUMENT_IDS = {name: iid for iid, name in get_tns_values('instruments')}
-TNS_CLASSIFICATION_IDS = {name: cid for cid, name in get_tns_values('object_types')}
+TNS_CLASSIFICATION_IDS = {name: cid for cid, name in get_tns_values('objtypes')}
 TNS_SPECTRUM_TYPE_IDS = {name: sid for sid, name in get_tns_values('spectra_types')}
 
 
