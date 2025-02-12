@@ -1,18 +1,25 @@
-[tool.poetry]
+[project]
 name = "tom-tns"
 version = "0.0.0"
 description = "TOMtoolkit module for reporting transients to the TNS"
-authors = ["Joseph Chatelain <jchatelain@lco.global>"]
+authors = [
+    {name = "Joseph Chatelain", email = "jchatelain@lco.global"}
+]
 license = "GPL-3.0-or-later"
 readme = "README.md"
+repository = "https://github.com/TOMToolkit/tom_tns"
 packages = [{include = "tom_tns"}]
-
-[tool.poetry.dependencies]
-python = ">=3.9.0,<3.13"
-tomtoolkit = ">=2.20.0"
+dynamic = ["version"]
+requires-python = ">=3.9,<3.13"
+dependencies = [
+    "tomtoolkit>=2.17.2,<3",
+]
 
 [tool.poetry.group.lint.dependencies]
-flake8 = ">=6.0,<7.2"
+flake8 = ">=6.0,<7.1"
+
+[tool.poetry.requires-plugins]
+poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
 
 [tool.poetry-dynamic-versioning]
 enable = true
@@ -26,7 +33,6 @@ pattern = "(?x)^[v]?((?P<epoch>\\d+)!)?(?P<base>\\d+(\\.\\d+)*)([-._]?((?P<stage
 # substitute version not only in pyproject.toml (which the config block above does)
 # but also the __version__.py file
 [tool.poetry-dynamic-versioning.substitution]
-
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
