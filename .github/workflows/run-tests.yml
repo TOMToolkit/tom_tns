@@ -35,4 +35,4 @@ jobs:
           python -m pip install poetry
           poetry install
       - name: Run tests
-        run: poetry run python -m unittest discover -v
+        run: poetry run python tom_tns/tests/run_tests.py
