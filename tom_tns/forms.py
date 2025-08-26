@@ -22,8 +22,9 @@ HERMES_FLUX_UNITS = [
 
 try:
     internal_name_format = settings.BROKERS['TNS'].get('internal_name_format')
-except:
+except (AttributeError, KeyError):
     internal_name_format = None
+
 
 class BaseReportForm(forms.Form):
     def is_set(self, field):
