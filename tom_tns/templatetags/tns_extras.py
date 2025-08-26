@@ -25,6 +25,7 @@ def report_to_tns(context):
     target = context['target']
     initial = {
         'object_name': target.name,
+        'internal_name': target.name,
         'ra': target.ra,
         'dec': target.dec,
         'submitter': context['request'].user.email,
