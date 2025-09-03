@@ -62,6 +62,13 @@ def group_names():
         return settings.BROKERS.get('TNS', {}).get('group_names', [])
 
 
+def example_internal_name(name_format):
+    """ Returns an example internal name string based on `internal_name_format` in settings
+    """
+
+    return name_format['prefix'] + name_format['year_format'] + 'xxx' + name_format['postfix']
+
+
 def get_tns_credentials():
     """
     Get the TNS credentials from settings.py.
