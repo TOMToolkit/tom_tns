@@ -292,9 +292,10 @@ def get_tns_report_reply(report_id, request):
         response = requests.post(urljoin(tns_info['tns_base_url'], 'api/get/bulk-report-reply'),
                                  headers={'User-Agent': tns_info['marker']}, data=reply_data)
         attempts += 1
+        delay_seconds = attempts  # increase delay time with each attempt
         # A 404 response means the report has not been processed yet
         if response.status_code == 404:
-            time.sleep(1)
+            time.sleep(delay_seconds)
         # A 400 response means the report failed with certain errors
         elif response.status_code == 400:
             raise BadTnsRequest(f"TNS submission failed with feedback: "
