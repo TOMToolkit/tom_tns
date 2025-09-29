@@ -275,7 +275,7 @@ def parse_object_from_tns_response(response_json, request):
     return iau_name
 
 
-def get_tns_report_reply(report_id, request, max_attempts:[int] = 10, delay_seconds: Optional[int] = None):
+def get_tns_report_reply(report_id, request, max_attempts: [int] = 10, delay_seconds: Optional[int] = None):
     """
     Get feedback from the Transient Name Server in response to a bulk report according to this manual:
     https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
