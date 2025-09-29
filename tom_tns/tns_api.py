@@ -1,5 +1,6 @@
 import requests
 from urllib.parse import urljoin
+from typing import Optional
 
 from django.core.cache import cache
 from django.conf import settings
@@ -274,7 +275,7 @@ def parse_object_from_tns_response(response_json, request):
     return iau_name
 
 
-def get_tns_report_reply(report_id, request):
+def get_tns_report_reply(report_id, request, max_attempts:[int] = 10, delay_seconds: Optional[int] = None):
     """
     Get feedback from the Transient Name Server in response to a bulk report according to this manual:
     https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
@@ -288,11 +289,12 @@ def get_tns_report_reply(report_id, request):
     # TNS Submissions return immediately with an id, which you must then check to see if the message
     # was processed, and if it was accepted or rejected. Here we check up to 10 times, waiting 1s
     # between checks. Under normal circumstances, it should be processed within a few seconds.
-    while attempts < 10:
+    while attempts < max_attempts:
         response = requests.post(urljoin(tns_info['tns_base_url'], 'api/get/bulk-report-reply'),
                                  headers={'User-Agent': tns_info['marker']}, data=reply_data)
         attempts += 1
-        delay_seconds = attempts  # increase delay time with each attempt
+        if not delay_seconds:
+            delay_seconds = attempts  # increase delay time with each attempt
         # A 404 response means the report has not been processed yet
         if response.status_code == 404:
             time.sleep(delay_seconds)
