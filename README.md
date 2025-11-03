@@ -50,7 +50,9 @@ TOMtoolkit module for reporting transients to the TNS
                 'fa20': 'LCO1m - Sinistro',
                 ...
             },  # Optional mapping from your reduced datum instrument name to TNS instrument names
-            'default_authors': 'Foo Bar <foo@bar.com>, Rando Calrissian, et al.'  # Optional default authors string to populate the author fields for tns submission. If not specified, defaults to saying "<logged in user> using <tom name>".
+            'default_authors': 'Foo Bar <foo@bar.com>, Rando Calrissian, et al.',  # Optional default authors string to populate the author fields for tns submission. If not specified, defaults to saying "<logged in user> using <tom name>".
+            'report_max_attempts': 10,  # Optional max number of attempts to make to retrieve a report after submission (Defaults o 10)
+            'report_delay_seconds': None, # Optional number of seconds to wait per attempt to retrieve a report (Scales up linearly by default)
         },
     }
     ```

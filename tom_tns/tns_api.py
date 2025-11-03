@@ -1,6 +1,5 @@
 import requests
 from urllib.parse import urljoin
-from typing import Optional
 
 from django.core.cache import cache
 from django.conf import settings
@@ -275,7 +274,7 @@ def parse_object_from_tns_response(response_json, request):
     return iau_name
 
 
-def get_tns_report_reply(report_id, request, max_attempts: [int] = 10, delay_seconds: Optional[int] = None):
+def get_tns_report_reply(report_id, request):
     """
     Get feedback from the Transient Name Server in response to a bulk report according to this manual:
     https://sandbox.wis-tns.org/sites/default/files/api/TNS_bulk_reports_manual.pdf
@@ -283,6 +282,8 @@ def get_tns_report_reply(report_id, request, max_attempts: [int] = 10, delay_sec
     Posts an informational message in a banner on the page using ``request``
     """
     tns_info = get_tns_credentials()
+    max_attempts = tns_info.get('report_max_attempts', 10)
+    delay_seconds = tns_info.get('report_delay_seconds')
     reply_data = {'api_key': tns_info['api_key'], 'report_id': report_id}
     iau_name = None
     attempts = 0
