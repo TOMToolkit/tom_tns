@@ -288,8 +288,10 @@ def get_tns_report_reply(report_id, request):
     iau_name = None
     attempts = 0
     # TNS Submissions return immediately with an id, which you must then check to see if the message
-    # was processed, and if it was accepted or rejected. Here we check up to 10 times, waiting 1s
-    # between checks. Under normal circumstances, it should be processed within a few seconds.
+    # was processed, and if it was accepted or rejected. Here we check up to 10 times, waiting
+    # between checks. By default, the delay between checks increases by 1s with each check. You can
+    # alter both the number of checks and the delay by setting `report_max_attempts` and `report_delay_seconds`
+    # in your TNS info in settings.py. Under normal circumstances, it should be processed within a few seconds.
     while attempts < max_attempts:
         response = requests.post(urljoin(tns_info['tns_base_url'], 'api/get/bulk-report-reply'),
                                  headers={'User-Agent': tns_info['marker']}, data=reply_data)
