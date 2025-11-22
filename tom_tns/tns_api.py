@@ -282,19 +282,25 @@ def get_tns_report_reply(report_id, request):
     Posts an informational message in a banner on the page using ``request``
     """
     tns_info = get_tns_credentials()
+    max_attempts = tns_info.get('report_max_attempts', 10)
+    delay_seconds = tns_info.get('report_delay_seconds')
     reply_data = {'api_key': tns_info['api_key'], 'report_id': report_id}
     iau_name = None
     attempts = 0
     # TNS Submissions return immediately with an id, which you must then check to see if the message
-    # was processed, and if it was accepted or rejected. Here we check up to 10 times, waiting 1s
-    # between checks. Under normal circumstances, it should be processed within a few seconds.
-    while attempts < 10:
+    # was processed, and if it was accepted or rejected. Here we check up to 10 times, waiting
+    # between checks. By default, the delay between checks increases by 1s with each check. You can
+    # alter both the number of checks and the delay by setting `report_max_attempts` and `report_delay_seconds`
+    # in your TNS info in settings.py. Under normal circumstances, it should be processed within a few seconds.
+    while attempts < max_attempts:
         response = requests.post(urljoin(tns_info['tns_base_url'], 'api/get/bulk-report-reply'),
                                  headers={'User-Agent': tns_info['marker']}, data=reply_data)
         attempts += 1
+        if not delay_seconds:
+            delay_seconds = attempts  # increase delay time with each attempt
         # A 404 response means the report has not been processed yet
         if response.status_code == 404:
-            time.sleep(1)
+            time.sleep(delay_seconds)
         # A 400 response means the report failed with certain errors
         elif response.status_code == 400:
             raise BadTnsRequest(f"TNS submission failed with feedback: "
