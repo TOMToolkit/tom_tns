@@ -72,7 +72,7 @@ def example_internal_name(name_format):
 def get_tns_credentials():
     """
     Get the TNS credentials from settings.py.
-    This should include the bot_id, bot_name, api_key, tns_base_url, and possibly group_name.
+    This should include the bot_id, bot_name, api_key, tns_base_url, and group_name.
     """
     try:
         tns_info = settings.BROKERS['TNS']

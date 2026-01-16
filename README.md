@@ -35,7 +35,7 @@ TOMtoolkit module for reporting transients to the TNS
             'bot_name': os.getenv('TNS_BOT_NAME', ''),  # This is the BOT name associated with the above ID
             'api_key': os.getenv('TNS_API_KEY', ''),  # This is the API key for the associated BOT         
             'tns_base_url': 'https://sandbox.wis-tns.org/',  # This is the sandbox URL. Use https://www.wis-tns.org/ for live submission.
-            'group_names': ['bot_group', 'PI_group'],  # Optional List. Include if you wish to use any affiliated Group Names when reporting.
+            'group_names': ['bot_group', 'PI_group'],  # Mandatory. You must choose an affiliated Group Name when reporting.
             'internal_name_format': {
                'prefix': 'MyProgramName',
                'year_format': 'YY',
