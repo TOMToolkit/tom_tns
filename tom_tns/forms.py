@@ -337,8 +337,12 @@ class TNSClassifyForm(BaseReportForm):
     observer = forms.CharField()
     reducer = forms.CharField(required=False)
     spectrum_type = forms.ChoiceField(choices=[])
-    ascii_file = forms.ChoiceField(label='ASCII file', choices=[], required=True, help_text='Select a DataProduct associated with this Target with a .txt or .ascii extension.')
-    fits_file = forms.ChoiceField(label='FITS file', choices=[], required=False, help_text='Select a DataProduct associated with this Target with a .fits or .fits.fz extension.')
+    ascii_file = forms.ChoiceField(label='ASCII file', choices=[], required=True, 
+                                   help_text='Select a DataProduct associated with this Target with a .txt or'
+                                   ' .ascii extension.')
+    fits_file = forms.ChoiceField(label='FITS file', choices=[], required=False, 
+                                  help_text='Select a DataProduct associated with this Target with a .fits or'
+                                  ' .fits.fz extension.')
     ascii_file_description = forms.CharField(label='ASCII file description', required=False)
     fits_file_description = forms.CharField(label='FITS file description', required=False)
     ascii_file_override = forms.FileField(label='ASCII file override', required=False, widget=forms.FileInput())
