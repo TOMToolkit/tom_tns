@@ -105,7 +105,7 @@ def classify_with_tns(context):
         initial['classifier'] = classifier
 
     # Get the list of chocies for ascii and fits files for those fields
-    ascii_files = []
+    ascii_files = [(None, '')]
     fits_files = [(None, '')]
     for data_product in target.dataproduct_set.all():
         if data_product.get_file_extension().lower() in ['.ascii', '.txt']:

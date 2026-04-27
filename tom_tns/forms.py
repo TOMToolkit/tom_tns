@@ -181,7 +181,7 @@ class TNSReportForm(BaseReportForm):
         )
 
     def clean(self):
-        super().clean()
+        clean_results = super().clean()
         # Either the archival info or nondetection flux info must be set for a valid TNS submission
         if not self.is_set('archive') or not self.is_set('archival_remarks'):
             if any([not self.is_set(field) for field in [
@@ -191,6 +191,7 @@ class TNSReportForm(BaseReportForm):
                     "Must set either last nondetection archival information,"
                     "or last nondetection flux, obsdate, filter and instrument"
                 )
+        return clean_results
 
     def generate_hermes_report(self):
         """
@@ -337,7 +338,7 @@ class TNSClassifyForm(BaseReportForm):
     observer = forms.CharField()
     reducer = forms.CharField(required=False)
     spectrum_type = forms.ChoiceField(choices=[])
-    ascii_file = forms.ChoiceField(label='ASCII file', choices=[], required=True,
+    ascii_file = forms.ChoiceField(label='ASCII file*', choices=[], required=False,
                                    help_text='Select a DataProduct associated with this Target with a .txt or'
                                    ' .ascii extension.')
     fits_file = forms.ChoiceField(label='FITS file', choices=[], required=False,
@@ -345,8 +346,10 @@ class TNSClassifyForm(BaseReportForm):
                                   ' .fits.fz extension.')
     ascii_file_description = forms.CharField(label='ASCII file description', required=False)
     fits_file_description = forms.CharField(label='FITS file description', required=False)
-    ascii_file_override = forms.FileField(label='ASCII file override', required=False, widget=forms.FileInput())
-    fits_file_override = forms.FileField(label='FITS file override', required=False, widget=forms.FileInput())
+    ascii_file_override = forms.FileField(label='ASCII file upload', required=False, widget=forms.FileInput(),
+                                          help_text='Overrides data product ASCII file above.')
+    fits_file_override = forms.FileField(label='FITS file upload', required=False, widget=forms.FileInput(),
+                                          help_text='Overrides data product FITS file above.')
     spectrum_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
 
     def __init__(self, *args, **kwargs):
@@ -413,6 +416,15 @@ class TNSClassifyForm(BaseReportForm):
             Row(Column('spectrum_remarks')),
             Row(Column(Submit('submit', 'Submit Classification'))),
         )
+
+    def clean(self):
+        clean_results = super().clean()
+        # Either the archival info or nondetection flux info must be set for a valid TNS submission
+        if not self.is_set('ascii_file') and not self.is_set('ascii_file_override'):
+                raise ValidationError(
+                    "Must include an ascii/txt file. Either choose an existing data product, or upload a new one."
+                )
+        return clean_results
 
     def generate_hermes_report(self):
         """
