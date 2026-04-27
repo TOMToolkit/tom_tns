@@ -349,7 +349,7 @@ class TNSClassifyForm(BaseReportForm):
     ascii_file_override = forms.FileField(label='ASCII file upload', required=False, widget=forms.FileInput(),
                                           help_text='Overrides data product ASCII file above.')
     fits_file_override = forms.FileField(label='FITS file upload', required=False, widget=forms.FileInput(),
-                                          help_text='Overrides data product FITS file above.')
+                                         help_text='Overrides data product FITS file above.')
     spectrum_remarks = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 2}))
 
     def __init__(self, *args, **kwargs):
@@ -421,8 +421,8 @@ class TNSClassifyForm(BaseReportForm):
         clean_results = super().clean()
         # Either the archival info or nondetection flux info must be set for a valid TNS submission
         if not self.is_set('ascii_file') and not self.is_set('ascii_file_override'):
-                raise ValidationError(
-                    "Must include an ascii/txt file. Either choose an existing data product, or upload a new one."
+            raise ValidationError(
+                "Must include an ascii/txt file. Either choose an existing data product, or upload a new one."
                 )
         return clean_results
 
