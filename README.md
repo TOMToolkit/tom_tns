@@ -24,11 +24,11 @@ TOMtoolkit module for reporting transients to the TNS
    NOTE: If you are testing on the sandbox, the sandbox is only synced every Sunday, so new bots created using the above link won't show up until after the next update.
 
    ### Submit to TNS directly (no hermes)
-   Add your TNS credentials to your `settings.py` if they don't already exist for the TNS Broker.
+   Add your TNS credentials to your `settings.py` if they don't already exist for the TNS Data Service.
    
 
    ```python
-    BROKERS = {
+    DATA_SERVICES = {
         ...
         'TNS': {
             'bot_id': os.getenv('TNS_BOT_ID', ''),  # This is the BOT ID you plan to use to submit to TNS
@@ -105,7 +105,7 @@ If you have customized the Target Details page of your TOM, or if you would like
  <a href="{% url 'tns:report-tns' pk=target.id datum_pk=datum.pk %}" title=TNS class="btn  btn-info">Submit to TNS</a>
 ```
 
-The datum_pk is optional. If it is not specified, the latest photometry reduced datum will be used to pre-fill the discovery report form, and the latest spectroscopy reduced datum will be used to pre-fill the classification report form. If you specifiy a datum pk, then that datum and associated data product will be used to pre-fill the proper forms.
+The datum_pk is optional. If it is not specified, the latest photometry reduced datum will be used to pre-fill the discovery report form, and the latest spectroscopy reduced datum will be used to pre-fill the classification report form. If you specify a datum pk, then that datum and associated data product will be used to pre-fill the proper forms.
 
 For example, if you want to add a link next to each data product to submit it to TNS, then you could just use the dataproducts first datum id for the `datum_pk`.
 
