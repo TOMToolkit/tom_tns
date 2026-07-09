@@ -24,11 +24,11 @@ TOMtoolkit module for reporting transients to the TNS
    NOTE: If you are testing on the sandbox, the sandbox is only synced every Sunday, so new bots created using the above link won't show up until after the next update.
 
    ### Submit to TNS directly (no hermes)
-   Add your TNS credentials to your `settings.py` if they don't already exist for the TNS Broker.
-   
+   Add your TNS credentials to your `settings.py` if they don't already exist for the TNS Data Service.
+
 
    ```python
-    BROKERS = {
+    DATA_SERVICES = {
         ...
         'TNS': {
             'bot_id': os.getenv('TNS_BOT_ID', ''),  # This is the BOT ID you plan to use to submit to TNS

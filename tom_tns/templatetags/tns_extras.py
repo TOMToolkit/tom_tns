@@ -1,7 +1,6 @@
 from django import template
 from django.conf import settings
 
-from tom_dataproducts.alertstreams.hermes import get_hermes_data_converter_class
 from tom_tns.tns_api import (get_tns_values, map_filter_to_tns, map_instrument_to_tns,
                              default_authors)
 from tom_tns.forms import TNSReportForm, TNSClassifyForm
@@ -48,36 +47,36 @@ def report_to_tns(context):
             reduced_datum = photometry.latest()
         preset_datum = False
 
-    if reduced_datum:
-        hermes_datum_converter = get_hermes_data_converter_class()(validate=False)
-        phot_data = hermes_datum_converter.get_hermes_photometry(reduced_datum)
-        initial['observation_date'] = phot_data['date_obs']
-        if phot_data.get('exposure_time'):
-            initial['exposure_time'] = phot_data['exposure_time']
-        instrument_name = map_instrument_to_tns(phot_data.get('instrument', ''))
-        if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
-            initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
-        else:
-            # Try the hermes 'telescope' field if instrument is not present or doesn't match TNS
-            instrument_name = map_instrument_to_tns(phot_data.get('telescope', ''))
-            if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
-                initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
-        if preset_datum and phot_data.get('telescope'):
-            # Only set the telescope if a preset datum was specified in loading the form
-            initial['telescope'] = phot_data['telescope']
-        mapped_filter = map_filter_to_tns(phot_data.get('bandpass', ''))
-        if mapped_filter and mapped_filter in TNS_FILTER_IDS:
-            initial['filter'] = (TNS_FILTER_IDS[mapped_filter], mapped_filter)
-        if phot_data.get('brightness'):
-            initial['flux'] = phot_data['brightness']
-        if phot_data.get('brightness_error'):
-            initial['flux_error'] = phot_data['brightness_error']
-        if phot_data.get('limiting_brightness'):
-            initial['limiting_flux'] = phot_data['limiting_brightness']
-        if phot_data.get('observer'):
-            initial['observer'] = phot_data['observer']
-        if phot_data.get('comments'):
-            initial['photometry_remarks'] = phot_data['comments']
+    # if reduced_datum:
+    #     hermes_datum_converter = get_hermes_data_converter_class()(validate=False)
+    #     phot_data = hermes_datum_converter.get_hermes_photometry(reduced_datum)
+    #     initial['observation_date'] = phot_data['date_obs']
+    #     if phot_data.get('exposure_time'):
+    #         initial['exposure_time'] = phot_data['exposure_time']
+    #     instrument_name = map_instrument_to_tns(phot_data.get('instrument', ''))
+    #     if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
+    #         initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
+    #     else:
+    #         # Try the hermes 'telescope' field if instrument is not present or doesn't match TNS
+    #         instrument_name = map_instrument_to_tns(phot_data.get('telescope', ''))
+    #         if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
+    #             initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
+    #     if preset_datum and phot_data.get('telescope'):
+    #         # Only set the telescope if a preset datum was specified in loading the form
+    #         initial['telescope'] = phot_data['telescope']
+    #     mapped_filter = map_filter_to_tns(phot_data.get('bandpass', ''))
+    #     if mapped_filter and mapped_filter in TNS_FILTER_IDS:
+    #         initial['filter'] = (TNS_FILTER_IDS[mapped_filter], mapped_filter)
+    #     if phot_data.get('brightness'):
+    #         initial['flux'] = phot_data['brightness']
+    #     if phot_data.get('brightness_error'):
+    #         initial['flux_error'] = phot_data['brightness_error']
+    #     if phot_data.get('limiting_brightness'):
+    #         initial['limiting_flux'] = phot_data['limiting_brightness']
+    #     if phot_data.get('observer'):
+    #         initial['observer'] = phot_data['observer']
+    #     if phot_data.get('comments'):
+    #         initial['photometry_remarks'] = phot_data['comments']
 
     tns_report_form = TNSReportForm(initial=initial)
     return {'target': target,
