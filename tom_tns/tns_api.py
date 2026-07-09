@@ -17,9 +17,11 @@ class BadTnsRequest(Exception):
 
 
 def submit_through_hermes():
-    """Check that we can, in fact, submit to hermes
-    This method is currently a no-op that disables hermes submission.
+    """ Check if hermes credentials exist and are setup so TNS messages should be sent through hermes
+        Returns True if it should go through hermes, False if it should go directly to TNS
     """
+    if hasattr(settings, 'DATA_SHARING') and settings.DATA_SHARING.get('hermes', {}).get('ENABLE_TNS', False):
+        return True
     return False
 
 
@@ -29,7 +31,7 @@ def map_filter_to_tns(filter):
     if submit_through_hermes():
         return settings.DATA_SHARING.get('hermes', {}).get('FILTER_MAPPING', {}).get(filter)
     else:
-        return settings.DATA_SERVICES.get('TNS', {}).get('filter_mapping', {}).get(filter)
+        return settings.BROKERS.get('TNS', {}).get('filter_mapping', {}).get(filter)
 
 
 def map_instrument_to_tns(instrument):
@@ -39,7 +41,7 @@ def map_instrument_to_tns(instrument):
     if submit_through_hermes():
         return settings.DATA_SHARING.get('hermes', {}).get('INSTRUMENT_MAPPING', {}).get(instrument)
     else:
-        return settings.DATA_SERVICES.get('TNS', {}).get('instrument_mapping', {}).get(instrument)
+        return settings.BROKERS.get('TNS', {}).get('instrument_mapping', {}).get(instrument)
 
 
 def default_authors():
@@ -48,7 +50,7 @@ def default_authors():
     if submit_through_hermes():
         return settings.DATA_SHARING.get('hermes', {}).get('DEFAULT_AUTHORS', '')
     else:
-        return settings.DATA_SERVICES.get('TNS', {}).get('default_authors', '')
+        return settings.BROKERS.get('TNS', {}).get('default_authors', '')
 
 
 def group_names():
@@ -57,7 +59,7 @@ def group_names():
     if submit_through_hermes():
         return settings.DATA_SHARING.get('hermes', {}).get('GROUP_NAMES', [])
     else:
-        return settings.DATA_SERVICES.get('TNS', {}).get('group_names', [])
+        return settings.BROKERS.get('TNS', {}).get('group_names', [])
 
 
 def example_internal_name(name_format):
@@ -73,7 +75,7 @@ def get_tns_credentials():
     This should include the bot_id, bot_name, api_key, tns_base_url, and group_name.
     """
     try:
-        tns_info = settings.DATA_SERVICES['TNS']
+        tns_info = settings.BROKERS['TNS']
 
         # Build TNS Marker using Bot info if API key is present
         if tns_info.get('api_key', None):

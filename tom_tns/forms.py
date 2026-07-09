@@ -21,7 +21,7 @@ HERMES_FLUX_UNITS = [
 ]
 
 try:
-    internal_name_format = settings.DATA_SERVICES['TNS'].get('internal_name_format')
+    internal_name_format = settings.BROKERS['TNS'].get('internal_name_format')
 except (AttributeError, KeyError):
     internal_name_format = None
 
