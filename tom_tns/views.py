@@ -12,7 +12,7 @@ from tom_tns.tns_api import (send_tns_report, get_tns_report_reply, get_tns_cred
                              submit_through_hermes, BadTnsRequest)
 from tom_tns.hermes_api import submit_to_hermes
 from tom_targets.models import Target, TargetName
-from tom_dataproducts.models import PhotometryReducedDatum
+from tom_dataproducts.models import ReducedDatum
 
 import json
 

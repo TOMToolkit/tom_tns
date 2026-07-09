@@ -43,7 +43,7 @@ def report_to_tns(context):
         preset_datum = True
     else:
         # Get photometry if available
-        photometry = target.photometryreduceddatum_set.all()
+        photometry = target.reduceddatum_set.filter(data_type='photometry')
         if photometry.exists():
             reduced_datum = photometry.latest()
         preset_datum = False
