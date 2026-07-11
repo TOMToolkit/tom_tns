@@ -1,6 +1,8 @@
 from django import template
 from django.conf import settings
 
+from tom_dataproducts.models import PhotometryReducedDatum, SpectroscopyReducedDatum
+
 from tom_tns.tns_api import (get_tns_values, map_filter_to_tns, map_instrument_to_tns,
                              default_authors)
 from tom_tns.forms import TNSReportForm, TNSClassifyForm
@@ -36,47 +38,35 @@ def report_to_tns(context):
     if reporter:
         initial['reporter'] = reporter
 
-    reduced_datum = None
-    if 'datum' in context and context['datum'].data_type == 'photometry':
-        reduced_datum = context['datum']
-        preset_datum = True
+    phot_data = PhotometryReducedDatum.objects.none()
+    if 'datum' in context and isinstance(context['datum'], PhotometryReducedDatum):
+        phot_data = context['datum']
     else:
         # Get photometry if available
         photometry = target.photometryreduceddatum_set.all()
         if photometry.exists():
-            reduced_datum = photometry.latest()
-        preset_datum = False
+            phot_data = photometry.latest("timestamp")
 
-    # if reduced_datum:
-    #     hermes_datum_converter = get_hermes_data_converter_class()(validate=False)
-    #     phot_data = hermes_datum_converter.get_hermes_photometry(reduced_datum)
-    #     initial['observation_date'] = phot_data['date_obs']
-    #     if phot_data.get('exposure_time'):
-    #         initial['exposure_time'] = phot_data['exposure_time']
-    #     instrument_name = map_instrument_to_tns(phot_data.get('instrument', ''))
-    #     if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
-    #         initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
-    #     else:
-    #         # Try the hermes 'telescope' field if instrument is not present or doesn't match TNS
-    #         instrument_name = map_instrument_to_tns(phot_data.get('telescope', ''))
-    #         if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
-    #             initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
-    #     if preset_datum and phot_data.get('telescope'):
-    #         # Only set the telescope if a preset datum was specified in loading the form
-    #         initial['telescope'] = phot_data['telescope']
-    #     mapped_filter = map_filter_to_tns(phot_data.get('bandpass', ''))
-    #     if mapped_filter and mapped_filter in TNS_FILTER_IDS:
-    #         initial['filter'] = (TNS_FILTER_IDS[mapped_filter], mapped_filter)
-    #     if phot_data.get('brightness'):
-    #         initial['flux'] = phot_data['brightness']
-    #     if phot_data.get('brightness_error'):
-    #         initial['flux_error'] = phot_data['brightness_error']
-    #     if phot_data.get('limiting_brightness'):
-    #         initial['limiting_flux'] = phot_data['limiting_brightness']
-    #     if phot_data.get('observer'):
-    #         initial['observer'] = phot_data['observer']
-    #     if phot_data.get('comments'):
-    #         initial['photometry_remarks'] = phot_data['comments']
+    if phot_data:
+        initial['observation_date'] = phot_data.timestamp
+        initial['exposure_time'] = phot_data.exposure_time
+        instrument_name = map_instrument_to_tns(phot_data.instrument)
+        if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
+            initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
+        else:
+            instrument_name = map_instrument_to_tns(phot_data.telescope)
+            if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
+                initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
+        initial['telescope'] = phot_data.telescope
+        mapped_filter = map_filter_to_tns(phot_data.bandpass)
+        if mapped_filter and mapped_filter in TNS_FILTER_IDS:
+            initial['filter'] = (TNS_FILTER_IDS[mapped_filter], mapped_filter)
+        if phot_data.brightness:
+            initial['flux'] = phot_data.brightness
+        if phot_data.brightness_error:
+            initial['flux_error'] = phot_data.brightness_error
+        if phot_data.limit:
+            initial['limiting_flux'] = phot_data.limit
 
     tns_report_form = TNSReportForm(initial=initial)
     return {'target': target,
@@ -115,49 +105,28 @@ def classify_with_tns(context):
     initial['fits_file_choices'] = fits_files
 
     # Get the spectra details from the latest spectra reduced datum or one passed in
-    reduced_datum = None
-    if 'datum' in context and context['datum'].data_type == 'spectroscopy':
-        reduced_datum = context['datum']
-        preset_datum = True
+    spectra_data = SpectroscopyReducedDatum.objects.none()
+    if 'datum' in context and isinstance(context['datum'], SpectroscopyReducedDatum):
+        spectra_data = context['datum']
     else:
-        spectra = target.reduceddatum_set.filter(data_type='spectroscopy')
+        spectra = target.spectroscopyreduceddatum_set.all()
         if spectra.exists():
-            reduced_datum = spectra.latest()
-        preset_datum = False
-    # if reduced_datum:
-    #     hermes_datum_converter = get_hermes_data_converter_class()(validate=False)
-    #     spectra_data = hermes_datum_converter.get_hermes_spectroscopy(reduced_datum)
-    #     initial['observation_date'] = spectra_data['date_obs']
-    #     if spectra_data.get('exposure_time'):
-    #         initial['exposure_time'] = spectra_data['exposure_time']
-    #     instrument_name = map_instrument_to_tns(spectra_data.get('instrument', ''))
-    #     if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
-    #         initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
-    #     else:
-    #         # Try the hermes 'telescope' field if instrument is not present or doesn't match TNS
-    #         instrument_name = map_instrument_to_tns(spectra_data.get('telescope', ''))
-    #         if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
-    #             initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
-    #     if preset_datum and spectra_data.get('telescope'):
-    #         # Only set the telescope if a preset datum was specified in loading the form
-    #         initial['telescope'] = spectra_data['telescope']
-    #     if spectra_data.get('reducer'):
-    #         initial['reducer'] = spectra_data['reducer']
-    #     if spectra_data.get('observer'):
-    #         initial['observer'] = spectra_data['observer']
-    #     if spectra_data.get('classification', '') in TNS_CLASSIFICATION_IDS:
-    #         initial['classification'] = (
-    #             TNS_CLASSIFICATION_IDS[spectra_data['classification']], spectra_data['classification']
-    #         )
-    #     if spectra_data.get('spec_type') in TNS_SPECTRUM_TYPE_IDS:
-    #         initial['spectrum_type'] = (
-    #             TNS_SPECTRUM_TYPE_IDS[spectra_data['spec_type']], spectra_data['spec_type']
-    #         )
-    #     if spectra_data.get('comments'):
-    #         initial['spectrum_remarks'] = spectra_data['comments']
+            spectra_data = spectra.latest("timestamp")
 
-    #     if reduced_datum.data_product and reduced_datum.data_product.get_file_extension().lower() in ['.ascii', '.txt']:
-    #         initial['ascii_file'] = (reduced_datum.data_product.pk, reduced_datum.data_product.get_file_name())
+    if spectra_data:
+        initial['observation_date'] = spectra_data.timestamp
+        initial['exposure_time'] = spectra_data.exposure_time
+        instrument_name = map_instrument_to_tns(spectra_data.instrument)
+        if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
+            initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
+        else:
+            instrument_name = map_instrument_to_tns(spectra_data.telescope)
+            if instrument_name and instrument_name in TNS_INSTRUMENT_IDS:
+                initial['instrument'] = (TNS_INSTRUMENT_IDS[instrument_name], instrument_name)
+        initial['telescope'] = spectra_data.telescope
+
+        if spectra_data.data_product and spectra_data.data_product.get_file_extension().lower() in ['.ascii', '.txt']:
+            initial['ascii_file'] = (spectra_data.data_product.pk, spectra_data.data_product.get_file_name())
 
     tns_classify_form = TNSClassifyForm(initial=initial)
     return {'target': target,
