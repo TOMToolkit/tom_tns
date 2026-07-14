@@ -12,7 +12,6 @@ from tom_tns.tns_api import (send_tns_report, get_tns_report_reply, get_tns_cred
                              submit_through_hermes, BadTnsRequest)
 from tom_tns.hermes_api import submit_to_hermes
 from tom_targets.models import Target, TargetName
-from tom_dataproducts.models import ReducedDatum
 
 import json
 
@@ -28,13 +27,6 @@ class TNSFormView(PermissionListMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['default_form'] = 'report'
         target = Target.objects.get(pk=self.kwargs['pk'])
-        if 'datum_pk' in self.kwargs:
-            try:
-                context['datum'] = ReducedDatum.objects.get(pk=self.kwargs['datum_pk'])
-                if context['datum'].data_type == 'spectroscopy':
-                    context['default_form'] = 'classify'
-            except ReducedDatum.DoesNotExist:
-                pass
         context['tns_configured'] = submit_through_hermes() or bool(get_tns_credentials())
         context['target'] = target
         context['version'] = __version__  # from tom_tns.__init__.py

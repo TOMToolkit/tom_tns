@@ -17,11 +17,9 @@ class BadTnsRequest(Exception):
 
 
 def submit_through_hermes():
-    """ Check if hermes credentials exist and are setup so TNS messages should be sent through hermes
-        Returns True if it should go through hermes, False if it should go directly to TNS
+    """ Check that we can, in fact, submit to hermes.
+    This method is currently a no-op that disables hermes submission.
     """
-    if hasattr(settings, 'DATA_SHARING') and settings.DATA_SHARING.get('hermes', {}).get('ENABLE_TNS', False):
-        return True
     return False
 
 
@@ -31,7 +29,7 @@ def map_filter_to_tns(filter):
     if submit_through_hermes():
         return settings.DATA_SHARING.get('hermes', {}).get('FILTER_MAPPING', {}).get(filter)
     else:
-        return settings.BROKERS.get('TNS', {}).get('filter_mapping', {}).get(filter)
+        return settings.DATA_SERVICES.get('TNS', {}).get('filter_mapping', {}).get(filter)
 
 
 def map_instrument_to_tns(instrument):
@@ -41,7 +39,7 @@ def map_instrument_to_tns(instrument):
     if submit_through_hermes():
         return settings.DATA_SHARING.get('hermes', {}).get('INSTRUMENT_MAPPING', {}).get(instrument)
     else:
-        return settings.BROKERS.get('TNS', {}).get('instrument_mapping', {}).get(instrument)
+        return settings.DATA_SERVICES.get('TNS', {}).get('instrument_mapping', {}).get(instrument)
 
 
 def default_authors():
@@ -50,7 +48,7 @@ def default_authors():
     if submit_through_hermes():
         return settings.DATA_SHARING.get('hermes', {}).get('DEFAULT_AUTHORS', '')
     else:
-        return settings.BROKERS.get('TNS', {}).get('default_authors', '')
+        return settings.DATA_SERVICES.get('TNS', {}).get('default_authors', '')
 
 
 def group_names():
@@ -59,7 +57,7 @@ def group_names():
     if submit_through_hermes():
         return settings.DATA_SHARING.get('hermes', {}).get('GROUP_NAMES', [])
     else:
-        return settings.BROKERS.get('TNS', {}).get('group_names', [])
+        return settings.DATA_SERVICES.get('TNS', {}).get('group_names', [])
 
 
 def example_internal_name(name_format):
@@ -72,10 +70,10 @@ def example_internal_name(name_format):
 def get_tns_credentials():
     """
     Get the TNS credentials from settings.py.
-    This should include the bot_id, bot_name, api_key, tns_base_url, and group_name.
+    This should include the bot_id, bot_name, api_key, base_url, and group_name.
     """
     try:
-        tns_info = settings.BROKERS['TNS']
+        tns_info = settings.DATA_SERVICES['TNS']
 
         # Build TNS Marker using Bot info if API key is present
         if tns_info.get('api_key', None):
@@ -141,7 +139,7 @@ def populate_tns_values():
         SPOOF_USER_AGENT = 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0.'
 
         # Use sandbox URL if no url found in settings.py
-        tns_base_url = get_tns_credentials().get('tns_base_url', 'https://sandbox.wis-tns.org/')
+        tns_base_url = get_tns_credentials().get('base_url', 'https://sandbox.wis-tns.org/')
         try:
             resp = requests.get(urljoin(tns_base_url, 'api/get/values/'),
                                 headers={'user-agent': SPOOF_USER_AGENT})
@@ -204,7 +202,7 @@ def pre_upload_files_to_tns(files):
     # build request parameters
     tns_marker = tns_credentials['marker']
     upload_data = {'api_key': tns_credentials['api_key']}
-    response = requests.post(urljoin(tns_credentials['tns_base_url'], 'api/set/file-upload'),
+    response = requests.post(urljoin(tns_credentials['base_url'], 'api/set/file-upload'),
                              headers={'User-Agent': tns_marker},
                              data=upload_data, files=file_load)
     response.raise_for_status()
@@ -231,7 +229,7 @@ def send_tns_report(data):
     """
     tns_info = get_tns_credentials()
     json_data = {'api_key': tns_info['api_key'], 'data': data}
-    response = requests.post(urljoin(tns_info['tns_base_url'], 'api/set/bulk-report'),
+    response = requests.post(urljoin(tns_info['base_url'], 'api/set/bulk-report'),
                              headers={'User-Agent': tns_info['marker']},
                              data=json_data)
     response.raise_for_status()
@@ -293,7 +291,7 @@ def get_tns_report_reply(report_id, request):
     # alter both the number of checks and the delay by setting `report_max_attempts` and `report_delay_seconds`
     # in your TNS info in settings.py. Under normal circumstances, it should be processed within a few seconds.
     while attempts < max_attempts:
-        response = requests.post(urljoin(tns_info['tns_base_url'], 'api/get/bulk-report-reply'),
+        response = requests.post(urljoin(tns_info['base_url'], 'api/get/bulk-report-reply'),
                                  headers={'User-Agent': tns_info['marker']}, data=reply_data)
         attempts += 1
         if not delay_seconds:
